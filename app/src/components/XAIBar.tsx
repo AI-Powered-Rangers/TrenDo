@@ -38,13 +38,21 @@ export function XAIBar({
           )}
         </div>
       </div>
-      <div className="relative h-2 overflow-hidden rounded-full bg-ink-50">
+      <div className="relative h-2.5 overflow-hidden rounded-full bg-ink-50 ring-1 ring-ink-100/60">
         <div
-          className={`h-full rounded-full ${
-            highlight ? 'bg-coral-500' : 'bg-ink-700'
+          className={`bar-fill relative h-full rounded-full ${
+            highlight
+              ? 'bg-gradient-to-r from-coral-300 via-coral-500 to-coral-600 shimmer'
+              : 'bg-gradient-to-r from-ink-500 via-ink-700 to-ink-700'
           }`}
           style={{ width: `${widthPct}%` }}
         />
+        {highlight && (
+          <div
+            className="pointer-events-none absolute top-0 h-full w-1 rounded-full bg-white/80 blur-[1px]"
+            style={{ left: `calc(${widthPct}% - 2px)` }}
+          />
+        )}
       </div>
     </div>
   )

@@ -5,14 +5,21 @@ export function ChallengeStepList({ steps }: { steps: Step[] }) {
   const [done, setDone] = useState<Record<number, boolean>>({})
   const total = steps.length
   const completed = Object.values(done).filter(Boolean).length
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-ink-700">단계별 가이드</h3>
-        <span className="text-xs text-ink-300">
+        <h3 className="text-sm font-black text-ink-700">따라하기 순서</h3>
+        <span className="rounded-full bg-coral-50 px-2.5 py-1 text-[11px] font-bold text-coral-600">
           {completed}/{total} 완료
         </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-ink-50">
+        <div
+          className="h-full rounded-full bg-coral-500 transition-all"
+          style={{ width: `${progress}%` }}
+        />
       </div>
       <ol className="space-y-2">
         {steps.map((s) => {
@@ -26,7 +33,7 @@ export function ChallengeStepList({ steps }: { steps: Step[] }) {
             >
               <button
                 onClick={() => setDone((d) => ({ ...d, [s.order]: !checked }))}
-                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-black ${
                   checked ? 'border-coral-500 bg-coral-500 text-white' : 'border-ink-200 text-ink-300'
                 }`}
                 aria-label={`step ${s.order} 토글`}
@@ -35,12 +42,14 @@ export function ChallengeStepList({ steps }: { steps: Step[] }) {
               </button>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-ink-700">{s.title}</p>
+                  <p className="text-sm font-black text-ink-700">{s.title}</p>
                   {s.duration_minutes ? (
-                    <span className="text-[11px] text-ink-300">{s.duration_minutes}분</span>
+                    <span className="rounded-full bg-ink-50 px-2 py-0.5 text-[11px] font-bold text-ink-300">
+                      {s.duration_minutes}분
+                    </span>
                   ) : null}
                 </div>
-                <p className="mt-0.5 text-sm leading-relaxed text-ink-400">{s.body}</p>
+                <p className="mt-1 break-keep text-sm leading-relaxed text-ink-400">{s.body}</p>
               </div>
             </li>
           )

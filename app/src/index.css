@@ -16,8 +16,30 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #FFF6F0 0%, #F2F4FA 100%);
   color: #0E1738;
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(255, 124, 79, 0.20), transparent 60%),
+    radial-gradient(700px 500px at 110% 8%, rgba(255, 191, 161, 0.22), transparent 65%),
+    radial-gradient(900px 700px at 50% 120%, rgba(120, 142, 220, 0.16), transparent 55%),
+    linear-gradient(180deg, #FFF6F0 0%, #F4F2FA 55%, #EEF1FA 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 [data-gen='senior'] {
@@ -154,6 +176,229 @@ body {
   .fusion-core-pulse,
   .fusion-node,
   .fusion-output {
+    animation: none;
+  }
+}
+
+/* ─── Graphics 2.0 — global visual layer ───────────────────────────── */
+
+.aurora-mesh {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 124, 79, 0.55), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(255, 92, 42, 0.42), transparent 50%),
+    radial-gradient(circle at 60% 80%, rgba(91, 110, 195, 0.55), transparent 55%),
+    linear-gradient(135deg, #1B2350 0%, #2C2160 60%, #4A1F4F 100%);
+  background-size: 220% 220%;
+  animation: aurora-shift 18s ease-in-out infinite;
+}
+
+@keyframes aurora-shift {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.glass-dark {
+  background: rgba(14, 23, 56, 0.6);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-coral {
+  filter: drop-shadow(0 0 14px rgba(255, 92, 42, 0.55))
+          drop-shadow(0 0 4px rgba(255, 124, 79, 0.6));
+}
+
+.glow-soft {
+  box-shadow:
+    0 18px 38px -18px rgba(255, 92, 42, 0.45),
+    0 8px 24px -10px rgba(23, 33, 73, 0.18);
+}
+
+.cover-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+}
+
+.cover-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 20% 0%, rgba(255, 255, 255, 0.32), transparent 55%),
+    linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+/* Animated bars */
+.bar-fill {
+  transform-origin: left center;
+  animation: bar-fill 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Map pin pulse */
+.pin-pulse {
+  transform-origin: center;
+  animation: pin-pulse 2.2s ease-out infinite;
+}
+.pin-pulse-2 {
+  animation-delay: 0.6s;
+}
+.pin-pulse-3 {
+  animation-delay: 1.2s;
+}
+@keyframes pin-pulse {
+  0% {
+    r: 6;
+    opacity: 0.7;
+  }
+  90% {
+    r: 26;
+    opacity: 0;
+  }
+  100% {
+    r: 26;
+    opacity: 0;
+  }
+}
+
+.flow-dash {
+  stroke-dasharray: 6 8;
+  animation: flow-dash 1.6s linear infinite;
+}
+@keyframes flow-dash {
+  to { stroke-dashoffset: -28; }
+}
+
+/* Ring sweep for radial gauges */
+.ring-sweep {
+  transform-origin: center;
+  animation: ring-sweep 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ring-sweep {
+  from { stroke-dasharray: 0 999; }
+}
+
+/* Floating breathe */
+.float-breathe {
+  animation: float-breathe 5.5s ease-in-out infinite;
+}
+@keyframes float-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Reveal on mount */
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: reveal 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.reveal-1 { animation-delay: 60ms; }
+.reveal-2 { animation-delay: 140ms; }
+.reveal-3 { animation-delay: 220ms; }
+@keyframes reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* AI translating orb */
+.ai-orb {
+  background: conic-gradient(from 0deg,
+    #FF7D4F 0%,
+    #FF5C2A 30%,
+    #6E76C9 55%,
+    #FFC0A4 80%,
+    #FF7D4F 100%);
+  filter: blur(2px);
+  animation: ai-orb-spin 3.4s linear infinite, ai-orb-breathe 2.8s ease-in-out infinite;
+}
+@keyframes ai-orb-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ai-orb-breathe {
+  0%, 100% { filter: blur(2px) brightness(1); }
+  50% { filter: blur(0.8px) brightness(1.18); }
+}
+
+.ai-token {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: #FFF3EE;
+  box-shadow: 0 0 10px rgba(255, 124, 79, 0.9);
+  animation: ai-token 2.6s linear infinite;
+}
+.ai-token-2 { animation-delay: 0.4s; }
+.ai-token-3 { animation-delay: 0.85s; }
+.ai-token-4 { animation-delay: 1.3s; }
+.ai-token-5 { animation-delay: 1.75s; }
+.ai-token-6 { animation-delay: 2.15s; }
+@keyframes ai-token {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  20% { opacity: 1; }
+  100% {
+    transform: translate(var(--tx, 28px), var(--ty, -32px)) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-mesh,
+  .bar-fill,
+  .shimmer::before,
+  .pin-pulse,
+  .flow-dash,
+  .ring-sweep,
+  .float-breathe,
+  .reveal,
+  .ai-orb,
+  .ai-token {
     animation: none;
   }
 }

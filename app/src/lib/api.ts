@@ -35,6 +35,11 @@ const TONE_LIBRARY: Record<Generation, { tag: string; verbs: string[]; closer: s
     verbs: ['역할 나눠서', '대결로', '함께 한 컷', '돌아가며'],
     closer: '누구의 한 입이 가장 쫀득할까요?',
   },
+  foreign: {
+    tag: 'EN-friendly · K-context',
+    verbs: ['try Korean style', 'with Hallabong', '5-min remix', 'with Heugimja'],
+    closer: 'A bite-size taste of contemporary Korean culture.',
+  },
 }
 
 const REGION_TWIST: Record<Region, string> = {

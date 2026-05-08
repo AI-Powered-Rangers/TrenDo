@@ -6,6 +6,9 @@ const KEYS = {
   joined: 'trendo.joined.v1',
   setlog: 'trendo.setlog.v1',
   postLikes: 'trendo.postLikes.v1',
+  myStories: 'trendo.myStories.v1',
+  storiesSeen: 'trendo.storiesSeen.v1',
+  doneTrends: 'trendo.doneTrends.v1',
 } as const
 
 type StoreKey = keyof typeof KEYS
@@ -16,6 +19,9 @@ const listeners: Record<StoreKey, Set<Listener>> = {
   joined: new Set(),
   setlog: new Set(),
   postLikes: new Set(),
+  myStories: new Set(),
+  storiesSeen: new Set(),
+  doneTrends: new Set(),
 }
 
 function notify(key: StoreKey) {
@@ -74,6 +80,7 @@ export const useSaved = () => useSet('saved')
 export const useLikedChallenges = () => useSet('liked')
 export const useJoined = () => useSet('joined')
 export const useLikedPosts = () => useSet('postLikes')
+export const useDoneTrends = () => useSet('doneTrends')
 
 import type { SetlogEntry } from '../types'
 
@@ -127,6 +134,81 @@ export function computeStreak(entries: SetlogEntry[]): number {
     else break
   }
   return streak
+}
+
+export interface MyStory {
+  id: string
+  challenge_id: string
+  cover_emoji: string
+  cover_gradient: string
+  caption: string
+  mood: '🔥' | '💛' | '🌿' | '😴' | '✨'
+  created_at: string // ISO
+}
+
+export function useMyStories(): [
+  MyStory[],
+  (entry: Omit<MyStory, 'id' | 'created_at'>) => MyStory,
+  (id: string) => void,
+] {
+  const lsKey = KEYS.myStories
+  const [items, setItems] = useState<MyStory[]>(() => readJSON<MyStory[]>(lsKey, []))
+
+  useEffect(() => {
+    return subscribe('myStories', () => setItems(readJSON<MyStory[]>(lsKey, [])))
+  }, [lsKey])
+
+  const add = useCallback(
+    (entry: Omit<MyStory, 'id' | 'created_at'>) => {
+      const next: MyStory = {
+        ...entry,
+        id: `ms-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        created_at: new Date().toISOString(),
+      }
+      const arr = readJSON<MyStory[]>(lsKey, [])
+      writeJSON(lsKey, [next, ...arr])
+      notify('myStories')
+      return next
+    },
+    [lsKey],
+  )
+
+  const remove = useCallback(
+    (id: string) => {
+      const arr = readJSON<MyStory[]>(lsKey, [])
+      writeJSON(
+        lsKey,
+        arr.filter((e) => e.id !== id),
+      )
+      notify('myStories')
+    },
+    [lsKey],
+  )
+
+  return [items, add, remove]
+}
+
+export function useStoriesSeen(): [Set<string>, (id: string) => void] {
+  const lsKey = KEYS.storiesSeen
+  const [snap, setSnap] = useState<Set<string>>(
+    () => new Set(readJSON<string[]>(lsKey, [])),
+  )
+  useEffect(() => {
+    return subscribe('storiesSeen', () => {
+      setSnap(new Set(readJSON<string[]>(lsKey, [])))
+    })
+  }, [lsKey])
+  const mark = useCallback(
+    (id: string) => {
+      const arr = readJSON<string[]>(lsKey, [])
+      if (arr.includes(id)) return
+      arr.push(id)
+      writeJSON(lsKey, arr)
+      notify('storiesSeen')
+    },
+    [lsKey],
+  )
+  return [snap, mark]
 }
 
 export async function shareLink(url: string, title: string): Promise<'native' | 'clipboard'> {

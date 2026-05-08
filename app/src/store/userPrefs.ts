@@ -6,6 +6,10 @@ const KEY = 'trendo.prefs.v1'
 const defaults: UserPrefs = {
   generation: 'adult',
   region: 'seoul',
+  interests: ['food', 'tradition', 'family'],
+  time_budget: '30m',
+  cost_range: 'under10k',
+  participation_type: 'family',
   onboarded: false,
 }
 

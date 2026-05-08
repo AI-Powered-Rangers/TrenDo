@@ -1,4 +1,4 @@
-export type Generation = 'teen' | 'adult' | 'senior' | 'family'
+export type Generation = 'teen' | 'adult' | 'senior' | 'family' | 'foreign'
 export type Region =
   | 'seoul'
   | 'jeonju'
@@ -10,6 +10,19 @@ export type Region =
   | 'incheon'
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
+export type InterestCategory =
+  | 'food'
+  | 'fashion'
+  | 'music'
+  | 'dance'
+  | 'tradition'
+  | 'festival'
+  | 'family'
+  | 'photo'
+  | 'fitness'
+export type TimeBudget = '10m' | '30m' | '1h' | 'halfday'
+export type CostRange = 'free' | 'under5k' | 'under10k' | 'under30k'
+export type ParticipationType = 'solo' | 'friends' | 'family' | 'local'
 
 export interface Material {
   name: string
@@ -43,6 +56,25 @@ export interface TraditionConnection {
   body: string
 }
 
+export interface CulturalContext {
+  origin: string
+  meaning: string
+  fun_point: string
+  caution: string
+}
+
+export type LocalEventType = 'festival' | 'workshop' | 'market' | 'exhibit'
+
+export interface LocalEvent {
+  id: string
+  region: Region
+  type: LocalEventType
+  name: string
+  when: string
+  body: string
+  matches: string[] // matching challenge ids
+}
+
 export interface ChallengeCard {
   id: string
   title: string
@@ -51,11 +83,19 @@ export interface ChallengeCard {
   cover_gradient: string
   difficulty: Difficulty
   duration_minutes: number
+  estimated_cost?: string
+  recommended_place?: string
+  safety_note?: string
+  etiquette_note?: string
+  quick_alternative?: string
+  low_cost_alternative?: string
+  participation_modes?: ParticipationType[]
   materials: Material[]
   steps: Step[]
   generation_variants: GenerationVariant[]
   local_variants: LocalVariant[]
   traditional_connection?: TraditionConnection
+  cultural_context?: CulturalContext
 }
 
 export interface TrendCardData {
@@ -93,6 +133,10 @@ export interface MapPin {
 export interface UserPrefs {
   generation: Generation
   region: Region
+  interests: InterestCategory[]
+  time_budget: TimeBudget
+  cost_range: CostRange
+  participation_type: ParticipationType
   onboarded: boolean
 }
 

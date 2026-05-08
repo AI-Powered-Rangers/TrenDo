@@ -11,6 +11,8 @@ import { Community } from './pages/Community'
 import { SetlogPage } from './pages/Setlog'
 import { SavedPage } from './pages/Saved'
 import { AdminPage } from './pages/Admin'
+import { LocalChallenges } from './pages/LocalChallenges'
+import { TrendToDoPage } from './pages/TrendToDoPage'
 import { useUserPrefs } from './store/userPrefs'
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/community" element={<Shell><Community /></Shell>} />
         <Route path="/setlog" element={<Shell><SetlogPage /></Shell>} />
         <Route path="/saved" element={<Shell><SavedPage /></Shell>} />
+        <Route path="/local" element={<Shell><LocalChallenges /></Shell>} />
+        <Route path="/todo" element={<Shell><TrendToDoPage /></Shell>} />
         <Route path="/map" element={<Shell><CultureMapPage /></Shell>} />
         <Route path="/retention" element={<Shell><RetentionPage /></Shell>} />
         <Route path="/me" element={<Shell><MePage /></Shell>} />

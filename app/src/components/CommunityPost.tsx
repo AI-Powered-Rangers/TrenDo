@@ -33,19 +33,21 @@ export function CommunityPostCard({ post }: { post: Post }) {
   }
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-card">
+    <article className="overflow-hidden rounded-[24px] bg-white shadow-card transition active:scale-[0.995]">
       <div
-        className={`relative aspect-[16/12] bg-gradient-to-br ${post.cover_gradient} flex items-end p-4 text-white`}
+        className={`relative aspect-[16/12] overflow-hidden bg-gradient-to-br ${post.cover_gradient} flex items-end p-4 text-white cover-grain`}
       >
+        <div className="absolute inset-0 cover-shine" />
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/35 blur-3xl" />
         {post.is_top && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-extrabold text-coral-600">
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-extrabold text-coral-600 shadow">
             🔥 TOP
           </span>
         )}
-        <span className="absolute right-3 top-3 rounded-full bg-black/30 px-2 py-0.5 text-[10px]">
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-black/40 px-2 py-0.5 text-[10px] backdrop-blur-sm">
           {region.label} · {genLabel[post.generation]}
         </span>
-        <div className="text-5xl drop-shadow-md">{post.cover_emoji}</div>
+        <div className="relative z-10 text-6xl drop-shadow-lg float-breathe">{post.cover_emoji}</div>
       </div>
 
       <div className="space-y-2 p-4">

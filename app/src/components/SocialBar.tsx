@@ -30,11 +30,11 @@ export function SocialBar({ challengeId, title }: Props) {
           toggleJoined(challengeId)
           toast.push(joined ? '참여 취소' : '오늘 챌린지에 참여했어요!')
         }}
-        className={`flex flex-col items-center gap-0.5 rounded-2xl py-2.5 text-[11px] font-bold transition ${
+        className={`flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-2xl py-2.5 text-[11px] font-black transition ${
           joined ? 'bg-coral-500 text-white' : 'bg-white text-ink-400 shadow-card'
         }`}
       >
-        <span className="text-base">{joined ? '✅' : '🙋'}</span>
+        <span className="text-lg">{joined ? '✅' : '🙋'}</span>
         <span>{joined ? '참여중' : '참여'}</span>
       </button>
       <button
@@ -42,11 +42,11 @@ export function SocialBar({ challengeId, title }: Props) {
           toggleLike(challengeId)
           toast.push(liked ? '좋아요 취소' : '좋아요 ❤️')
         }}
-        className={`flex flex-col items-center gap-0.5 rounded-2xl py-2.5 text-[11px] font-bold transition ${
+        className={`flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-2xl py-2.5 text-[11px] font-black transition ${
           liked ? 'bg-coral-50 text-coral-600 ring-1 ring-coral-200' : 'bg-white text-ink-400 shadow-card'
         }`}
       >
-        <span className="text-base">{liked ? '❤️' : '🤍'}</span>
+        <span className="text-lg">{liked ? '❤️' : '🤍'}</span>
         <span>좋아요</span>
       </button>
       <button
@@ -54,18 +54,18 @@ export function SocialBar({ challengeId, title }: Props) {
           toggleSaved(challengeId)
           toast.push(saved ? '저장 해제' : '내 피드에 저장됨')
         }}
-        className={`flex flex-col items-center gap-0.5 rounded-2xl py-2.5 text-[11px] font-bold transition ${
+        className={`flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-2xl py-2.5 text-[11px] font-black transition ${
           saved ? 'bg-ink-700 text-white' : 'bg-white text-ink-400 shadow-card'
         }`}
       >
-        <span className="text-base">{saved ? '🔖' : '📑'}</span>
+        <span className="text-lg">{saved ? '🔖' : '📑'}</span>
         <span>저장</span>
       </button>
       <button
         onClick={onShare}
-        className="flex flex-col items-center gap-0.5 rounded-2xl bg-white py-2.5 text-[11px] font-bold text-ink-400 shadow-card"
+        className="flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-2xl bg-white py-2.5 text-[11px] font-black text-ink-400 shadow-card"
       >
-        <span className="text-base">📤</span>
+        <span className="text-lg">📤</span>
         <span>공유</span>
       </button>
     </div>
