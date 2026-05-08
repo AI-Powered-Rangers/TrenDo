@@ -38,7 +38,7 @@ const statusStyle: Record<FlowStatus, { dot: string; ring: string; label: string
 }
 
 export function TrendFlow() {
-  const [activeId, setActiveId] = useState<string>('flow-5')
+  const [activeId, setActiveId] = useState<string>('flow-1')
   const active = FLOW_MAIN.find((s) => s.id === activeId)
   const activeBranch = FLOW_BRANCHES.find((b) => b.id === activeId)
   const challenge = active
@@ -62,12 +62,12 @@ export function TrendFlow() {
               Trend Flow Map
             </div>
             <h2 className="mt-1 break-keep text-xl font-black leading-tight">
-              유행은 어떤 코드로 다음 유행을 낳았나
+              지금 이 유행은 어떤 코드에서 왔나요
             </h2>
           </div>
           <div className="text-right text-[11px]">
-            <div className="text-coral-200">8주 흐름</div>
-            <div className="text-white/70">두쫀쿠 → 이튼 메스</div>
+            <div className="text-coral-200">지금 → 과거</div>
+            <div className="text-white/70">우베 ← … ← 두쫀쿠</div>
           </div>
         </div>
 
@@ -208,8 +208,8 @@ export function TrendFlow() {
               label={active.label}
               era={active.era}
               status={active.status}
-              whyThen={active.why_then}
-              linkToNext={active.link_to_next}
+              whyNow={active.why_now}
+              evolvedFrom={active.evolved_from}
               challengeId={active.challenge_id}
               challengeTitle={challenge?.title}
             />
@@ -220,7 +220,7 @@ export function TrendFlow() {
               label={activeBranch.label}
               era={activeBranch.era}
               status={activeBranch.status}
-              whyThen={activeBranch.note}
+              whyNow={activeBranch.note}
               isBranch
               challengeId={activeBranch.challenge_id}
               challengeTitle={challenge?.title}
@@ -237,8 +237,8 @@ function ActiveCard({
   label,
   era,
   status,
-  whyThen,
-  linkToNext,
+  whyNow,
+  evolvedFrom,
   isBranch,
   challengeId,
   challengeTitle,
@@ -247,13 +247,14 @@ function ActiveCard({
   label: string
   era: string
   status: FlowStatus
-  whyThen: string
-  linkToNext?: string
+  whyNow: string
+  evolvedFrom?: string
   isBranch?: boolean
   challengeId: string
   challengeTitle?: string
 }) {
   const s = statusStyle[status]
+  const whyLabel = status === 'peak' ? '왜 지금 뜨고 있나' : '왜 그때 떴나'
   return (
     <div className="space-y-3">
       <div className="flex items-baseline gap-2">
@@ -264,21 +265,21 @@ function ActiveCard({
       </div>
 
       <p className="break-keep text-[12px] leading-relaxed text-white/85">
-        <span className="font-bold text-coral-200">왜 그때 떴나 · </span>
-        {whyThen}
+        <span className="font-bold text-coral-200">{whyLabel} · </span>
+        {whyNow}
       </p>
 
-      {linkToNext && (
+      {evolvedFrom && (
         <div className="rounded-xl bg-coral-500/15 p-3 text-[11px] leading-relaxed text-coral-100">
-          <span className="font-bold text-coral-200">다음으로 이어진 코드 · </span>
-          {linkToNext}
+          <span className="font-bold text-coral-200">← 이건 어디서 왔나요 · </span>
+          {evolvedFrom}
         </div>
       )}
 
       {isBranch && (
         <div className="rounded-xl bg-stone-500/20 p-3 text-[11px] leading-relaxed text-white/75">
           <span className="font-bold text-stone-200">분기 · </span>
-          본류에 합류하지 못한 단발 챌린지. 흐름선에는 잠깐만 점멸.
+          본류에 합류하지 못하고 따로 잠깐 떠올랐다가 빠진 흐름.
         </div>
       )}
 

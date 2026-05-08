@@ -4,7 +4,7 @@ import { TrendFlow } from '../components/TrendFlow'
 import { FestivalTrendCard } from '../components/FestivalTrendCard'
 import { PopupGallery } from '../components/PopupGallery'
 import { PINS } from '../data/retention'
-import { LOCAL_FESTIVALS } from '../data/localFestivals'
+import { festivalsBySource } from '../data/localFestivals'
 import { formatCount } from '../lib/format'
 
 export function CultureMapPage() {
@@ -67,10 +67,45 @@ export function CultureMapPage() {
         </div>
 
         <div className="space-y-4">
-          {LOCAL_FESTIVALS.map((f) => (
+          {festivalsBySource('collab').map((f) => (
             <FestivalTrendCard key={f.id} festival={f} />
           ))}
         </div>
+      </section>
+
+      {/* visitkorea 2026 캘린더 기반 축제 */}
+      <section className="space-y-3">
+        <div className="px-1">
+          <div className="text-[11px] font-extrabold tracking-[0.3em] text-coral-600">
+            VISITKOREA 2026
+          </div>
+          <h2 className="text-xl font-black text-ink-700">
+            대한민국 구석구석 · 이번 시즌 축제
+          </h2>
+          <p className="mt-1 text-xs text-ink-300">
+            한국관광공사 “월별 축제 달력” 2026 일정 기반.
+            <br />
+            함평 나비대축제 · 진해 군항제 · 보령 머드 · 해운대 모래 · 가파도 청보리 · 서울장미 · 여주 도자기 · 고궁음악회.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {festivalsBySource('visitkorea').map((f) => (
+            <FestivalTrendCard key={f.id} festival={f} />
+          ))}
+        </div>
+
+        <p className="px-1 text-[11px] text-ink-300">
+          📍 출처:{' '}
+          <a
+            href="https://korean.visitkorea.or.kr/kfes/list/festivalCalendar.do"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-coral-600"
+          >
+            대한민국 구석구석 — 월별 축제 달력
+          </a>
+        </p>
       </section>
     </div>
   )
