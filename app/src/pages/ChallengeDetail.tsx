@@ -118,6 +118,17 @@ export function ChallengeDetail() {
       <div
         className={`relative overflow-hidden bg-gradient-to-br ${card.cover_gradient} pb-10 pt-12 text-white cover-grain`}
       >
+        {card.image_url && (
+          <img
+            src={card.image_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" />
         <div className="absolute inset-0 cover-shine" />
         <div className="absolute -right-16 -top-12 h-48 w-48 rounded-full bg-white/30 blur-3xl" />
         <div className="absolute -left-12 -bottom-10 h-40 w-40 rounded-full bg-black/20 blur-3xl" />

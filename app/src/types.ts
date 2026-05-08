@@ -90,6 +90,7 @@ export interface ChallengeCard {
   quick_alternative?: string
   low_cost_alternative?: string
   participation_modes?: ParticipationType[]
+  image_url?: string
   materials: Material[]
   steps: Step[]
   generation_variants: GenerationVariant[]

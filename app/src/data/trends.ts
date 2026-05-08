@@ -118,6 +118,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '시간이 없으면 시판 치즈케이크에 우베 잼만 한 줄 그려도 단면 컷 가능.',
     low_cost_alternative: '우베 페이스트 대신 자색고구마 페이스트 + 코코넛밀크로 비용 절반.',
     participation_modes: ['solo', 'friends', 'family'],
+    image_url: '/photos/ube-cheesecake.jpg',
     materials: [
       { name: '크림치즈', amount: '300g' },
       { name: '우베 페이스트(또는 자색고구마)', amount: '150g' },
@@ -277,6 +278,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '시간이 없으면 굳히지 않고 바로 한 입씩 떠먹는 “해체 버전”으로.',
     low_cost_alternative: '생크림 대신 플레인요거트 + 딸기잼으로 만들면 비용이 절반.',
     participation_modes: ['solo', 'friends', 'family'],
+    image_url: '/photos/cookie-strawberry.jpg',
     materials: [
       { name: '쿠크다스(2팩)', amount: '24개' },
       { name: '딸기', amount: '300g' },
@@ -332,6 +334,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '시간이 없으면 시판 쫀득 쿠키에 피스타치오 페이스트만 발라 “해체 버전”으로.',
     low_cost_alternative: '피스타치오 페이스트 대신 흑임자 페이스트 + 꿀 1큰술로 비용 절반.',
     participation_modes: ['solo', 'friends', 'family'],
+    image_url: '/photos/dujjonku.jpg',
     materials: [
       { name: '카다이프 면', amount: '100~150g' },
       { name: '피스타치오 페이스트', amount: '120~150g' },
@@ -391,6 +394,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '시간이 부족하면 미니컵에 나눠 175℃ 18분으로 줄일 수 있어요.',
     low_cost_alternative: '우유 대신 두유, 바닐라 대신 시나몬 1꼬집으로 비용 절약.',
     participation_modes: ['solo', 'friends', 'family'],
+    image_url: '/photos/butter-rice.jpg',
     materials: [
       { name: '찹쌀가루', amount: '180g' },
       { name: '타피오카 전분(선택)', amount: '20~30g' },
@@ -497,6 +501,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '냉동에 1시간만 두면 더 빨리 굳어 통에서 꺼낼 수 있어요.',
     low_cost_alternative: '커버춰 대신 시판 가나·허쉬 초콜릿 + 식용유 1작은술로도 충분.',
     participation_modes: ['solo', 'friends'],
+    image_url: '/photos/pringles-choco.jpg',
     materials: [
       { name: '프링글스(오리지널)', amount: '1통' },
       { name: '다크 또는 밀크초콜릿', amount: '180~220g' },

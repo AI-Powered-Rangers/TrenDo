@@ -41,6 +41,17 @@ export function TrendCard({
       <div
         className={`relative flex min-h-[190px] overflow-hidden bg-gradient-to-br ${trend.cover_gradient} p-4 text-white cover-grain`}
       >
+        {challenge?.image_url && (
+          <img
+            src={challenge.image_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
         <div className="absolute inset-0 cover-shine" />
         <div className="absolute -right-10 -top-8 h-36 w-36 rounded-full bg-white/30 blur-3xl" />
         <div className="absolute left-3 top-3 rounded-full bg-black/24 px-2.5 py-1 text-[11px] font-bold">
@@ -56,7 +67,9 @@ export function TrendCard({
         )}
         <div className="relative mt-auto flex w-full items-end justify-between gap-3">
           <div>
-            <div className="text-6xl drop-shadow-md">{trend.emoji}</div>
+            {!challenge?.image_url && (
+              <div className="text-6xl drop-shadow-md">{trend.emoji}</div>
+            )}
             <h3 className="mt-2 break-keep text-2xl font-black leading-tight drop-shadow">
               {trend.title}
             </h3>
