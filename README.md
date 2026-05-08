@@ -60,8 +60,6 @@ TrendDo Admin은 단순 CMS가 아니라 **AI 문화 운영 관제실**입니다
 
 ### 1. 트렌드 수집 콘솔
 
-실제 API 또는 demo seed 기반으로 수집된 유행을 관리자 선택지에 반영합니다. 수집 진행률과 반영된 트렌드 카드가 함께 표시됩니다.
-
 ![Trend collection console](docs/admin-screenshots/trend-collection.png)
 
 ### 2. Trend-Do Generator
