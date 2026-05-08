@@ -225,6 +225,7 @@ export const CHALLENGES: ChallengeCard[] = [
     quick_alternative: '머랭이 없으면 시판 마카롱 셸이나 카스타드 비스킷을 부숴 대체할 수 있어요.',
     low_cost_alternative: '생크림 대신 그릭요거트 + 꿀 1큰술로 가볍게 만들 수 있어요.',
     participation_modes: ['solo', 'friends', 'family'],
+    image_url: '/photos/eton-mess.jpg',
     materials: [
       { name: '딸기(또는 베리류)', amount: '200g' },
       { name: '머랭(시판)', amount: '50g' },
