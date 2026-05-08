@@ -59,6 +59,10 @@ npm run dev
 | `CULTURE_API_URL` | 문화시설/행사 JSON API endpoint. `CULTURE_API_KEY`와 함께 있으면 live culture asset provider 사용 |
 | `TREND_RSS_URLS` | 쉼표로 구분한 RSS/Atom 트렌드 소스. 있으면 live trend provider 사용 |
 | `TREND_CSV_URL` | `title,description,source_url,hashtags,category,views_24h,saves` 헤더를 가진 CSV URL |
+| `YOUTUBE_API_KEY` | 있으면 음식/여행/액티비티/숏츠 소비문화 카테고리별 YouTube 영상 신호를 수집 |
+| `INSTAGRAM_ACCESS_TOKEN` | 승인된 Instagram Graph API/hashtag source 연결용. 공개 전체 트렌드 탐색은 공식 API 제약상 기본 비활성 |
+| `INSTAGRAM_TREND_CSV_URL` | Instagram/Reels 리서치 결과를 CSV로 연결할 때 사용하는 확장용 URL |
+| `KAKAO_MAP_API_KEY`, `VITE_KAKAO_MAP_API_KEY` | 관리자 지도용 Kakao JavaScript 키 |
 | `DATABASE_URL` | 있으면 향후 DB 연결 기준. 현재 구현은 로컬 JSON store를 SQLite fallback처럼 사용 |
 
 ### demo_seed와 real_api 차이
@@ -66,6 +70,8 @@ npm run dev
 - `real_api`: `OPENAI_API_KEY`로 실제 OpenAI API 호출에 성공한 LLM/Embedding 결과입니다.
 - `demo_seed`: API 키가 없거나 외부 데이터 API가 연결되지 않은 상태의 seed/fallback 데이터입니다.
 - `mock_data`: 공공데이터 키는 감지됐지만 provider가 아직 실제 endpoint로 완성되지 않은 경우의 명시적 stub 표시입니다.
+
+트렌드 수집은 검색어 급상승어를 기본값으로 쓰지 않습니다. 기본 루프는 `food`, `travel`, `activity`, `shorts_culture` 카테고리별 YouTube provider를 우선 사용하고, 키가 없으면 같은 카테고리 구조의 `demo_seed`를 표시합니다. `TREND_RSS_URLS`는 뉴스/검색 신호를 보조로 보고 싶을 때만 명시적으로 켭니다.
 
 관리자 UI는 모든 데이터와 AI 결과에 provenance badge를 표시합니다. AI 생성 챌린지, 제안 메일, 리포트는 항상 검수 필요 상태로 시작하며 관리자 승인 없이 공개/발송되지 않습니다.
 

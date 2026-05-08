@@ -7,12 +7,15 @@ import {
   AnalyticsDiagnosisSchema,
   AdminBriefingSchema,
   ChallengeGenerationSchema,
+  ExperienceCardSchema,
   GenerationTranslationSchema,
   HeritageRemixSchema,
   ImpactReportSchema,
   LocalMatchExplanationSchema,
+  LocalMatchVerificationSchema,
   ProposalEmailSchema,
   SafetyReviewSchema,
+  TrendCardPackageSchema,
   TrendContextSchema,
 } from './schemas.js'
 import { adminStore } from './store.js'
@@ -21,7 +24,7 @@ import { calculateTrendToActionScore, deterministicEmbedding } from './scoring.j
 const PROMPT_VERSION = 'trendo-admin-v1.0.0'
 
 const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 25_000, maxRetries: 1 })
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 60_000, maxRetries: 1 })
   : null
 const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
 const embeddingModel = process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small'
@@ -79,6 +82,113 @@ function fallbackFor(moduleName: string, input: unknown): unknown {
       confidence: 0.61,
     }
   }
+  if (moduleName === 'generateTrendCardPackage') {
+    const inputObject = input as { trend?: Trend; candidate?: any; localAssets?: LocalAsset[] }
+    const trend = inputObject.trend ?? input as Trend
+    const risky = /초상권|얼굴|무단|위험|괴롭힘|조롱|미성년|개인정보|좌석/.test(`${trend.title} ${trend.description}`)
+    return {
+      safety_gate: {
+        allow_card_generation: !/괴롭힘|불법|혐오/.test(`${trend.title} ${trend.description}`),
+        risk_level: risky ? 'medium' : 'low',
+        detected_harmful_elements: risky ? ['초상권/개인정보 또는 안전 주의 필요'] : [],
+        caution_messages: risky
+          ? ['타인 얼굴, 학교명, 좌석번호, 실시간 위치가 노출되지 않도록 안내하세요.']
+          : ['관리자 검수 후 사용자 앱 공개가 가능합니다.'],
+        blocked_reason: null,
+      },
+      base_card: {
+        title: trend.title,
+        one_line_summary: `${trend.title}를 실제로 해볼 수 있는 지역·전통문화 참여 카드로 바꿉니다.`,
+        category: [trend.category, '지역문화', '참여형'],
+        cultural_context: {
+          origin_or_background: 'SNS/Shorts/Reels/커뮤니티 기반 유행 신호를 바탕으로 한 운영용 요약입니다.',
+          meaning: '빠르게 소비되는 유행을 세대별 이해와 실제 행동으로 전환합니다.',
+          caution: risky ? '초상권, 개인정보, 조롱성 따라 하기 여부를 검수해야 합니다.' : '유래를 단정하지 않고 확인된 맥락만 설명합니다.',
+          source_limits: ['demo_seed fallback 또는 제한된 API 신호일 수 있음'],
+        },
+        recommended_targets: ['10대', '2030', '4050', '60대 이상', '가족'],
+        local_connection_idea: '전통시장, 공방, 축제, 지역 식재료 중 하나와 연결합니다.',
+        traditional_remix_idea: '전통 음식, 공예, 의복, 놀이 요소를 오늘의 언어로 설명합니다.',
+      },
+      audience_cards: [
+        { audience: 'teen', card_title: `${trend.title} 한 컷 챌린지`, hook: '짧게 찍고 안전하게 인증해요.', explanation: '핵심 장면만 남기고 개인정보는 가립니다.', tone_caution: '친구나 선생님을 조롱하는 표현은 제외합니다.', accessibility_note: '준비물은 1~2개로 줄입니다.' },
+        { audience: '20s_30s', card_title: `${trend.title} 퇴근 후 로컬 버전`, hook: '근처 시장이나 카페와 연결해요.', explanation: '소비에서 끝내지 않고 짧은 방문 경험으로 바꿉니다.', tone_caution: '상업적 과장 표현을 피합니다.', accessibility_note: '30분 이내 코스로 제안합니다.' },
+        { audience: '40s_50s', card_title: `${trend.title} 가족 대화 카드`, hook: '왜 유행인지 쉽게 풀어봅니다.', explanation: '세대가 같이 이해하고 해볼 수 있게 맥락을 제공합니다.', tone_caution: '젊은 세대 비하 표현을 피합니다.', accessibility_note: '비용과 이동 부담을 낮춥니다.' },
+        { audience: '60_plus', card_title: `${trend.title} 천천히 따라하기`, hook: '낯선 유행을 쉬운 말로 설명합니다.', explanation: '유래보다 의미와 해볼 수 있는 행동에 집중합니다.', tone_caution: '인터넷 은어는 풀어서 설명합니다.', accessibility_note: '단계를 작게 나눕니다.' },
+        { audience: 'family', card_title: `${trend.title} 온가족 기록`, hook: '각자 역할을 나눠 함께 완성해요.', explanation: '세대별 기억과 오늘의 유행을 연결합니다.', tone_caution: '미성년자 얼굴 공개는 선택으로 둡니다.', accessibility_note: '집/지역공간 두 버전을 둡니다.' },
+        { audience: 'foreigner', card_title: `${trend.title} K-culture tryout`, hook: 'Try the trend with local context.', explanation: 'Explain cultural sources respectfully and simply.', tone_caution: 'Avoid claiming unverified origins.', accessibility_note: 'Use simple materials and optional photos.' },
+      ],
+      todo: {
+        title: `${trend.title} 지역 문화 ToDo`,
+        estimated_minutes: 30,
+        estimated_cost: 10000,
+        difficulty: 'easy',
+        materials: ['스마트폰', '선택한 지역 재료/장소', '기록 문장'],
+        steps: [
+          { title: '유행 이해하기', body: '카드의 세대별 설명을 읽고 핵심 행동을 확인합니다.' },
+          { title: '지역 요소 고르기', body: '시장, 축제, 공방, 전통문화 요소 중 하나를 선택합니다.' },
+          { title: '작게 실행하기', body: '10~30분 안에 가능한 방식으로 직접 해봅니다.' },
+          { title: '안전하게 인증하기', body: '타인 얼굴과 개인정보를 제외하고 사진 또는 한 줄 기록을 남깁니다.' },
+        ],
+        proof_type: '사진 또는 비공개 체크',
+        safety_notice: '초상권, 위치정보, 미성년자 개인정보를 노출하지 마세요.',
+      },
+      xai: {
+        top_reasons: ['행동으로 전환 가능', '지역 자산과 연결 가능', '세대별 설명으로 접근성 개선'],
+        deduction_reasons: risky ? ['초상권/개인정보 검수 필요'] : ['실제 확산 데이터가 제한적일 수 있음'],
+        evidence_refs: trend.evidence_refs ?? [trend.source_url ?? trend.source],
+        uncertainty: ['관리자 최종 승인 전 사용자 앱에 공개하지 않음'],
+      },
+      confidence: 0.64,
+    }
+  }
+  if (moduleName === 'generateExperienceCard') {
+    const inputObject = input as {
+      selected_trends?: string[]
+      region?: { label?: string; specialties?: string[]; traditional_culture?: string[]; festivals?: { name: string }[]; assets?: { name: string }[] }
+    }
+    const trends = inputObject.selected_trends?.length ? inputObject.selected_trends : ['선택한 유행']
+    const regionLabel = inputObject.region?.label ?? '선택 지역'
+    const localKeywords = [
+      ...(inputObject.region?.specialties ?? []).slice(0, 2),
+      ...(inputObject.region?.traditional_culture ?? []).slice(0, 2),
+      ...(inputObject.region?.festivals ?? []).slice(0, 1).map((festival) => festival.name),
+    ].filter(Boolean)
+    const trendText = trends.join(' ')
+    const signature = localKeywords[0] ?? '지역 문화'
+    const fusionName = /쿠키|두쫀쿠|디저트|빵|케이크/.test(trendText)
+      ? `${signature} 쫀득 디저트 챌린지`
+      : /러닝|운동|크루|버터런/.test(trendText)
+        ? `${signature} 로컬 무브 챌린지`
+        : /사진|직관|영상|릴스|쇼츠/.test(trendText)
+          ? `${signature} 한 컷 기록 챌린지`
+          : `${signature} 트렌드 리믹스 챌린지`
+    return {
+      card_title: fusionName,
+      emoji: /디저트|빵|쿠키|불닭|음식|비빔밥/.test(trends.join(' ')) ? '🍽️' : /러닝|운동/.test(trends.join(' ')) ? '🏃' : '🏮',
+      subtitle: '유행 키워드와 지역 소재를 하나의 새 체험 방식으로 융합한 관리자 검수용 카드입니다.',
+      local_story: `${trends.join(', ')}를 그대로 붙이지 않고 ${regionLabel}의 ${localKeywords.join(', ') || '지역 문화 자산'}을 재료·장소·스토리로 녹여 ${fusionName}로 전환합니다.`,
+      region_label: regionLabel,
+      selected_trends: trends,
+      local_keywords: localKeywords,
+      safety_notice: '초상권, 위치정보, 미성년자 개인정보를 노출하지 않고 비공개 인증도 허용하세요.',
+      xai: {
+        match_score: 84,
+        reasons: ['선택한 유행이 짧은 행동으로 전환 가능', '지역 키워드와 인증 장소를 만들기 쉬움', '세대별 설명으로 문화 접근성을 높일 수 있음'],
+        cautions: ['유래를 단정하지 말 것', '상업적 과장 표현을 피할 것'],
+        evidence_refs: ['selected_trends', 'region_intelligence', 'generation_policy'],
+      },
+      generation_todos: [
+        { generation: 'teen', label: '10대', title: `${fusionName} 쇼츠 미션`, explanation: '지역 소재를 유행의 모양, 식감, 포즈, 기록 방식 안에 녹여 짧게 시도합니다.', steps: [{ title: '융합 포인트 고르기', body: `${signature}의 맛, 색, 장소감 중 하나를 유행 방식에 섞습니다.` }, { title: '한 컷 실행', body: '완성 장면만 짧게 기록하고 개인정보는 가립니다.' }], estimated_minutes: 15, proof_type: '사진 또는 짧은 문장', tone_note: '짧고 직접적인 말투' },
+        { generation: 'adult', label: '30·40대', title: `${fusionName} 퇴근 후 버전`, explanation: '시간과 비용이 부담되지 않게 지역 소재를 실제 구매, 방문, 제작 행동으로 바꿉니다.', steps: [{ title: '지역 소재 정하기', body: `${signature}를 맛, 재료, 장소 중 하나로 활용합니다.` }, { title: '30분 체험', body: '구매/방문/기록 중 하나만 실행합니다.' }], estimated_minutes: 30, proof_type: '체크리스트', tone_note: '실용적이고 따뜻한 말투' },
+        { generation: 'senior', label: '50·60대', title: `${fusionName} 천천히 이해하기`, explanation: '낯선 유행을 먼저 쉬운 말로 풀고, 익숙한 지역 음식·장소·전통과 이어 설명합니다.', steps: [{ title: '유행 뜻 읽기', body: `${trends[0]}가 왜 유행인지 쉬운 설명을 먼저 읽습니다.` }, { title: '익숙한 소재로 바꾸기', body: `${signature}처럼 아는 지역 요소를 넣어 직접 해볼 수 있는 형태로 바꿉니다.` }], estimated_minutes: 25, proof_type: '비공개 완료 체크', tone_note: '자세하고 친절한 말투' },
+        { generation: 'family', label: '온 가족', title: '역할 나눠 함께하기', explanation: '세대가 함께 이해하고 참여하도록 역할을 나눕니다.', steps: [{ title: '역할 정하기', body: '설명 담당, 준비 담당, 기록 담당을 나눕니다.' }, { title: '같이 인증', body: '얼굴 공개 없이 결과물 중심으로 기록합니다.' }], estimated_minutes: 35, proof_type: '가족 기록 카드', tone_note: '공동체 중심 말투' },
+        { generation: 'foreign', label: '외국인', title: 'Local K-culture Tryout', explanation: 'K-culture context is explained simply without assuming prior knowledge.', steps: [{ title: 'Read context', body: 'Check what the trend means in simple language.' }, { title: 'Try locally', body: 'Connect it with one local food, place, or festival.' }], estimated_minutes: 30, proof_type: 'photo or short note', tone_note: 'simple English-friendly tone' },
+      ],
+      admin_gate: { status: 'needs_review', review_points: ['지역 연결이 억지스럽지 않은지 확인', '세대별 설명에 고정관념이 없는지 확인', '안전 문구 포함 여부 확인'] },
+      confidence: 0.68,
+    }
+  }
   if (moduleName === 'reviewSafety') {
     const challenge = input as Challenge
     const risky = /불꽃|위험|노출|개인정보|미성년/.test(`${challenge.description} ${challenge.safety_notice}`)
@@ -90,6 +200,27 @@ function fallbackFor(moduleName: string, input: unknown): unknown {
       suggested_revision: `${challenge.description}\n\n개인정보와 위치정보를 제외하고 인증하도록 안내합니다.`,
       approval_recommendation: risky ? 'revise' : 'approve',
       confidence: 0.64,
+    }
+  }
+  if (moduleName === 'verifyLocalMatch') {
+    const inputObject = input as {
+      trend?: Trend
+      localAsset?: LocalAsset
+      profiledScore?: { hardReject?: boolean; rejectReasons?: string[]; reasons?: string[] }
+    }
+    const rejected = Boolean(inputObject.profiledScore?.hardReject)
+    return {
+      verdict: rejected ? 'reject' : 'approve',
+      explanation: rejected
+        ? `프로필 기반 점수에서 ${inputObject.profiledScore?.rejectReasons?.[0] ?? '핵심 근거 부족'}이 감지되어 사용자 카드 연결 전 재검토가 필요합니다.`
+        : `${inputObject.trend?.title ?? '선택 유행'}과 ${inputObject.localAsset?.name ?? '지역 자산'}은 행동, 장소, 문화 맥락 근거가 있어 관리자 검수 후보로 적합합니다.`,
+      required_evidence: {
+        trend_action: inputObject.profiledScore?.reasons?.[0] ?? '유행의 핵심 행동이 추출되었습니다.',
+        asset_experience: inputObject.localAsset?.description ?? '지역 자산 체험 설명',
+        local_reason: inputObject.profiledScore?.reasons?.join(' / ') ?? '지역 연결 근거',
+      },
+      missing_evidence: rejected ? inputObject.profiledScore?.rejectReasons ?? ['매칭 근거 부족'] : [],
+      confidence: rejected ? 0.72 : 0.78,
     }
   }
   if (moduleName === 'translateByGeneration') {
@@ -310,6 +441,41 @@ export const generateChallenge = (trend: Trend, trendContext: unknown) =>
     system: 'Create a safe, locally actionable challenge. It must begin as needs_review and require human approval.',
   })
 
+export const generateTrendCardPackage = (input: { trend: Trend; candidate?: unknown; localAssets?: LocalAsset[] }) =>
+  runStructured({
+    moduleName: 'generateTrendCardPackage',
+    schema: TrendCardPackageSchema,
+    input,
+    system: `You are TrendDo's senior Korean culture operations AI.
+Generate a user-facing trend card package from a trend candidate.
+Strict rules:
+- Do not invent a historical origin. If uncertain, say it is an observed social/shortform signal.
+- If the trend can cause portrait rights, privacy, harassment, minor safety, illegal action, copyright, or cultural distortion risk, warn clearly.
+- If harmful content is severe, set allow_card_generation=false and explain blocked_reason.
+- Create audience-specific cards for teen, 20s_30s, 40s_50s, 60_plus, family, foreigner.
+- Create a Do-It todo with <=5 steps, low-cost materials, proof type, and safety notice.
+- The output is an admin draft only and must require human approval before publication.`,
+  })
+
+export const generateExperienceCard = (input: unknown) =>
+  runStructured({
+    moduleName: 'generateExperienceCard',
+    schema: ExperienceCardSchema,
+    input,
+    system: `You are TrendDo's culture conversion AI.
+Create one beautiful admin-review experience card from selected trend keywords and a selected Korean region.
+Do not merely concatenate "trend + region/place". Invent a fused cultural experience.
+Example: If input is "두바이쫀득쿠키" and Gangwon/Gangneung has "감자떡", output an idea like "감자떡 쫀득쿠키 챌린지" or "초당두부 크림 쫀득쿠키" with steps that actually blend texture, ingredient, place, and story.
+The card_title must be a new fused idea name, not "A + B" and not "A × region".
+The local_story must explain exactly which local ingredient/place/tradition is transformed into which action.
+Each generation_todo must include concrete fusion actions, not generic "choose a local element".
+Reflect the user app generations exactly: teen, adult, senior, family, foreign.
+For senior users, explain the trend more slowly and clearly.
+For teen users, keep it short and action-oriented.
+For family users, split roles across generations.
+Never publish automatically. Return admin-review JSON only.`,
+  })
+
 export const translateByGeneration = (trendContext: unknown) =>
   runStructured({
     moduleName: 'translateByGeneration',
@@ -340,6 +506,19 @@ export const generateLocalMatchExplanation = (trend: Trend, challenge: Challenge
     schema: LocalMatchExplanationSchema,
     input: { trend, challenge, localAsset, scoreBreakdown },
     system: 'Explain why a local asset matches a trend challenge, including limits.',
+  })
+
+export const verifyLocalMatch = (trend: Trend, challenge: Challenge, localAsset: LocalAsset, scoreBreakdown: unknown, profiledScore: unknown) =>
+  runStructured({
+    moduleName: 'verifyLocalMatch',
+    schema: LocalMatchVerificationSchema,
+    input: { trend, challenge, localAsset, scoreBreakdown, profiledScore },
+    system: `You are TrendDo's strict local culture matching verifier.
+Approve only when the trend's core action can realistically happen through the local asset.
+Reject food trends matched to places with no food, market, festival, cafe, recipe, or ingredient evidence.
+Reject making/craft trends matched to places with no workshop, material, learning, or hands-on evidence.
+Reject media/meme trends unless there is a clear exhibition, performance, heritage, festival, or local storytelling reason.
+Return concise JSON for admin review; never invent evidence.`,
   })
 
 export const generateProposalEmail = (challenge: Challenge, localAsset: LocalAsset, organization: string) =>
