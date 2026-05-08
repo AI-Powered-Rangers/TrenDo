@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { CultureMap } from '../components/CultureMap'
 import { TrendFlow } from '../components/TrendFlow'
 import { FestivalTrendCard } from '../components/FestivalTrendCard'
+import { PopupGallery } from '../components/PopupGallery'
 import { PINS } from '../data/retention'
 import { LOCAL_FESTIVALS } from '../data/localFestivals'
 import { formatCount } from '../lib/format'
@@ -45,6 +46,8 @@ export function CultureMapPage() {
       </div>
 
       <CultureMap />
+
+      <PopupGallery />
 
       {/* 지자체 × 트렌드 콜라보 페스티벌 */}
       <section className="space-y-3">
