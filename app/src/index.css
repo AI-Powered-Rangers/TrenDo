@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #FFF6F0 0%, #F2F4FA 100%);
+  color: #0E1738;
+}
+
+[data-gen='senior'] {
+  font-size: 17px;
+}
+[data-gen='teen'],
+[data-gen='adult'] {
+  font-size: 15px;
+}
+
+.shadow-card { box-shadow: 0 6px 28px -10px rgba(23,33,73,0.25); }
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }
+
+.fusion-stream {
+  fill: none;
+  stroke: url(#fusionStream);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 8 12;
+  opacity: 0.76;
+  animation: fusion-flow 2.8s linear infinite;
+}
+
+.fusion-ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.32);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 10;
+  transform-origin: 210px 178px;
+}
+
+.fusion-ring-a {
+  animation: fusion-spin 11s linear infinite;
+}
+
+.fusion-ring-b {
+  stroke: rgba(255, 92, 42, 0.58);
+  animation: fusion-spin-reverse 8s linear infinite;
+}
+
+.fusion-core-pulse {
+  fill: rgba(255, 92, 42, 0.62);
+  stroke: rgba(255, 192, 164, 0.95);
+  stroke-width: 2;
+  transform-origin: 210px 178px;
+  animation: fusion-core 2.4s ease-in-out infinite;
+}
+
+.fusion-packet {
+  fill: #FFF3EE;
+  filter: drop-shadow(0 0 8px rgba(255, 92, 42, 0.85));
+}
+
+.fusion-node {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 9px 10px;
+  box-shadow: 0 16px 44px -22px rgba(255, 92, 42, 0.75);
+  backdrop-filter: blur(10px);
+  animation: fusion-node-breathe 3.6s ease-in-out infinite;
+}
+
+.fusion-core-card,
+.fusion-judge {
+  backdrop-filter: blur(10px);
+}
+
+.fusion-output {
+  animation: fusion-output-pop 3.6s ease-in-out infinite;
+}
+
+.fusion-delay-0 { animation-delay: 0s; }
+.fusion-delay-1 { animation-delay: 0.32s; }
+.fusion-delay-2 { animation-delay: 0.64s; }
+.fusion-delay-3 { animation-delay: 0.96s; }
+.fusion-delay-4 { animation-delay: 1.28s; }
+
+@keyframes fusion-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -40; }
+}
+
+@keyframes fusion-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fusion-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes fusion-core {
+  0%, 100% {
+    opacity: 0.76;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fusion-node-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(255, 192, 164, 0.42);
+  }
+}
+
+@keyframes fusion-output-pop {
+  0%, 100% {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    transform: translateY(-2px);
+    background: rgba(255, 92, 42, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fusion-stream,
+  .fusion-ring-a,
+  .fusion-ring-b,
+  .fusion-core-pulse,
+  .fusion-node,
+  .fusion-output {
+    animation: none;
+  }
+}
