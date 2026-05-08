@@ -144,6 +144,7 @@ export interface MyStory {
   caption: string
   mood: '🔥' | '💛' | '🌿' | '😴' | '✨'
   created_at: string // ISO
+  image_data_url?: string // 사용자가 첨부한 사진 (data URL)
 }
 
 export function useMyStories(): [

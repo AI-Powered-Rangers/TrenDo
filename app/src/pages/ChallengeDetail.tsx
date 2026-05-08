@@ -28,7 +28,7 @@ import type { ChallengeCard } from '../types'
 
 const difficultyLabel: Record<string, string> = { easy: '쉬움', medium: '중간', hard: '도전' }
 const generationLabel: Record<string, string> = {
-  teen: '10대',
+  teen: '10~20대',
   adult: '30·40대',
   senior: '50·60대',
   family: '온 가족',

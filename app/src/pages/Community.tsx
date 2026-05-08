@@ -5,7 +5,7 @@ import type { Generation } from '../types'
 
 const FILTERS: Array<{ id: 'all' | Generation; label: string }> = [
   { id: 'all', label: '전체' },
-  { id: 'teen', label: '10대' },
+  { id: 'teen', label: '10~20대' },
   { id: 'adult', label: '30·40대' },
   { id: 'senior', label: '50·60대' },
   { id: 'family', label: '온 가족' },

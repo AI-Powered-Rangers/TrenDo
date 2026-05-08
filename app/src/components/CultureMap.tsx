@@ -15,8 +15,18 @@ const FLOWS: Array<[string, string]> = [
   ['daegu', 'busan'],
 ]
 
-export function CultureMap() {
-  const [active, setActive] = useState<string | null>(null)
+interface CultureMapProps {
+  selectedRegion?: string | null
+  onSelectRegion?: (region: string | null) => void
+}
+
+export function CultureMap({ selectedRegion, onSelectRegion }: CultureMapProps = {}) {
+  const [internalActive, setInternalActive] = useState<string | null>(null)
+  const active = selectedRegion !== undefined ? selectedRegion : internalActive
+  const setActive = (next: string | null) => {
+    if (onSelectRegion) onSelectRegion(next)
+    else setInternalActive(next)
+  }
   const total = useMemo(() => PINS.reduce((s, p) => s + p.count, 0), [])
   const sorted = useMemo(() => [...PINS].sort((a, b) => b.count - a.count), [])
 

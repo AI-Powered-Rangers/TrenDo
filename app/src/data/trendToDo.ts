@@ -746,14 +746,14 @@ export interface InsiderEntry {
 }
 
 export const INSIDER_LEADERBOARD: InsiderEntry[] = [
-  { id: 'in-1', name: 'soyo_22', emoji: '🐰', region: '서울', generation: '10대', done_count: 18 },
+  { id: 'in-1', name: 'soyo_22', emoji: '🐰', region: '서울', generation: '10~20대', done_count: 18 },
   { id: 'in-2', name: '두딸 엄마', emoji: '👩‍👧‍👧', region: '부산', generation: '30·40대', done_count: 16 },
   { id: 'in-3', name: '강릉베리', emoji: '🫐', region: '강릉', generation: '30·40대', done_count: 14 },
   { id: 'in-4', name: '우리 엄마 손', emoji: '👵', region: '전주', generation: '50·60대', done_count: 13 },
   { id: 'in-5', name: '한라봉메스', emoji: '🍊', region: '제주', generation: '30·40대', done_count: 11 },
   { id: 'in-6', name: '지수네 가족', emoji: '👨‍👩‍👧', region: '전주', generation: '온 가족', done_count: 9 },
-  { id: 'in-7', name: '대구 라이온', emoji: '🦁', region: '대구', generation: '10대', done_count: 8 },
+  { id: 'in-7', name: '대구 라이온', emoji: '🦁', region: '대구', generation: '10~20대', done_count: 8 },
   { id: 'in-8', name: '커피 버터떡', emoji: '☕', region: '강릉', generation: '30·40대', done_count: 7 },
   { id: 'in-9', name: 'jihoo_kor', emoji: '🌐', region: '제주', generation: '외국인', done_count: 6 },
-  { id: 'in-10', name: '한 번만 만들어 봄', emoji: '🥫', region: '서울', generation: '10대', done_count: 5 },
+  { id: 'in-10', name: '한 번만 만들어 봄', emoji: '🥫', region: '서울', generation: '10~20대', done_count: 5 },
 ]

@@ -58,7 +58,7 @@ const CATEGORY_TO_INTEREST: Partial<Record<TrendCardData['category'], InterestCa
 }
 
 const GENERATION_LABEL: Record<Generation, string> = {
-  teen: '10대',
+  teen: '10~20대',
   adult: '30·40대',
   senior: '50·60대',
   family: '온 가족',
@@ -271,7 +271,7 @@ export const REGION_TINT: Record<Region, { hero: string; chipBg: string; chipTex
 export const GEN_GUIDE: Record<Generation, { emoji: string; title: string; body: string }> = {
   teen: {
     emoji: '🎬',
-    title: '10대 가이드',
+    title: '10~20대 가이드',
     body: '단면 컷·ASMR 컷 따기 좋은 순간을 짧은 호흡으로 안내해드려요.',
   },
   adult: {

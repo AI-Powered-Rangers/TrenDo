@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { LocalFestival } from '../data/localFestivals'
 import { findChallenge } from '../data/trends'
@@ -5,79 +6,86 @@ import { findChallenge } from '../data/trends'
 const SOURCE_BADGE: Record<LocalFestival['source'], { emoji: string; label: string; cls: string }> = {
   collab: {
     emoji: '🤝',
-    label: '지자체 × TrenDo 콜라보',
+    label: '콜라보',
     cls: 'bg-coral-500 text-white',
   },
   visitkorea: {
     emoji: '🇰🇷',
-    label: '대한민국 구석구석 2026',
+    label: 'VisitKorea',
     cls: 'bg-ink-700 text-white',
   },
 }
 
-export function FestivalTrendCard({ festival }: { festival: LocalFestival }) {
+interface Props {
+  festival: LocalFestival
+  /** true면 헤더만 표시하고 클릭 시 인라인 펼침 (기본값: true) */
+  collapsible?: boolean
+}
+
+export function FestivalTrendCard({ festival, collapsible = true }: Props) {
   const sourceBadge = SOURCE_BADGE[festival.source]
+  const [open, setOpen] = useState(!collapsible)
 
   return (
     <article className="overflow-hidden rounded-[24px] bg-white shadow-card">
-      {/* hero */}
-      <div
-        className={`relative overflow-hidden bg-gradient-to-br ${festival.cover_gradient} p-5 text-white cover-grain`}
+      {/* hero — clickable to toggle */}
+      <button
+        type="button"
+        onClick={() => collapsible && setOpen((o) => !o)}
+        className={`relative block w-full overflow-hidden bg-gradient-to-br ${festival.cover_gradient} p-4 text-left text-white cover-grain ${
+          collapsible ? 'transition active:scale-[0.99]' : ''
+        }`}
       >
         <div className="absolute inset-0 cover-shine" />
-        <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/30 blur-3xl" />
 
-        <div className="relative flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/85">
-              <span>📍 {festival.city_label}</span>
-              <span className="rounded-full bg-white/20 px-2 py-0.5 backdrop-blur-sm">
-                {festival.when}
-              </span>
+        <div className="relative flex items-center gap-3">
+          <span className="text-3xl drop-shadow">{festival.emoji}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/85">
+              <span>{festival.city_label}</span>
+              <span>·</span>
+              <span>{festival.when}</span>
             </div>
-            <h3 className="mt-2 break-keep text-xl font-black leading-tight drop-shadow">
-              {festival.emoji} {festival.name}
+            <h3 className="mt-0.5 truncate text-base font-black leading-tight">
+              {festival.name}
             </h3>
-            <p className="mt-1.5 break-keep text-[12px] leading-relaxed text-white/85">
-              {festival.base_pitch}
-            </p>
-            {festival.highlight && (
-              <p className="mt-1 break-keep text-[11px] text-white/70">
-                ✦ {festival.highlight}
-              </p>
-            )}
           </div>
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${sourceBadge.cls}`}
+          >
+            {sourceBadge.emoji}
+          </span>
+          {collapsible && (
+            <span className={`text-white/70 transition ${open ? 'rotate-180' : ''}`}>⌄</span>
+          )}
         </div>
+      </button>
 
-        <div
-          className={`relative mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold backdrop-blur-sm ${sourceBadge.cls}`}
-        >
-          <span>{sourceBadge.emoji}</span>
-          <span>{festival.marketing_partner ?? sourceBadge.label}</span>
-        </div>
-      </div>
+      {/* expanded content */}
+      {open && (
+        <div className="space-y-3 p-4">
+          <p className="break-keep text-[12px] leading-relaxed text-ink-500">
+            {festival.base_pitch}
+          </p>
+          {festival.highlight && (
+            <p className="break-keep text-[11px] text-ink-400">✦ {festival.highlight}</p>
+          )}
 
-      {/* trend pitch — 콜라보일 때만 */}
-      {festival.trend_pitch && (
-        <div className="px-5 py-4">
-          <div className="rounded-2xl bg-coral-50 p-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-coral-600">
-              Trend Collab Pitch
+          {festival.marketing_partner && (
+            <div className="text-[10px] font-bold text-coral-600">
+              🤝 {festival.marketing_partner}
             </div>
-            <p className="mt-1 break-keep text-[13px] leading-relaxed text-coral-700">
-              {festival.trend_pitch}
-            </p>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* tieins */}
-      {festival.tieins.length > 0 ? (
-        <div className="border-t border-ink-50 px-5 py-4">
-          <div className="flex items-baseline justify-between">
-            <h4 className="text-sm font-black text-ink-700">트렌드 결합 부스 / 클래스</h4>
-            <span className="text-[11px] font-bold text-ink-300">{festival.tieins.length}개</span>
-          </div>
+          {festival.trend_pitch && (
+            <div className="rounded-xl bg-coral-50 p-3 text-[12px] leading-relaxed text-coral-700">
+              {festival.trend_pitch}
+            </div>
+          )}
+
+          {festival.tieins.length > 0 ? (
+            <div>
+              <h4 className="mb-2 text-[12px] font-black text-ink-700">트렌드 결합 부스</h4>
           <ul className="mt-3 space-y-2">
             {festival.tieins.map((t) => {
               const ch = findChallenge(t.challenge_id)
@@ -106,13 +114,13 @@ export function FestivalTrendCard({ festival }: { festival: LocalFestival }) {
                 </li>
               )
             })}
-          </ul>
-        </div>
-      ) : (
-        <div className="border-t border-ink-50 bg-ink-50/50 px-5 py-3 text-center text-[11px] text-ink-400">
-          {festival.source === 'visitkorea'
-            ? '대한민국 구석구석 공식 일정 — 트렌드 결합 부스는 진행 시 자동 매칭됩니다.'
-            : '트렌드 결합 부스 준비 중'}
+              </ul>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-ink-50/60 p-3 text-center text-[11px] text-ink-400">
+              트렌드 결합 부스는 일정 확정 시 안내됩니다.
+            </div>
+          )}
         </div>
       )}
     </article>

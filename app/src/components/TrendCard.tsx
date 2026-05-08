@@ -5,7 +5,7 @@ import { findChallenge } from '../data/trends'
 import { MatchBadge } from './MatchBadge'
 
 const genLabel: Record<string, string> = {
-  teen: '10대',
+  teen: '10~20대',
   adult: '30·40대',
   senior: '50·60대',
   family: '온 가족',

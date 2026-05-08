@@ -22,6 +22,7 @@ export function StoryStrip() {
       challenge_id: s.challenge_id,
       mood: s.mood,
       mine: true,
+      image_data_url: s.image_data_url,
     }))
     const others: StoryItem[] = COMMUNITY_POSTS.map((p) => ({
       id: p.id,
@@ -40,12 +41,7 @@ export function StoryStrip() {
   return (
     <section className="rounded-[24px] bg-white shadow-card">
       <div className="flex items-baseline justify-between px-4 pt-3">
-        <div>
-          <div className="text-sm font-black text-ink-700">오늘의 자랑샷</div>
-          <p className="mt-0.5 text-[11px] text-ink-300">
-            동네 사람들이 지금 막 끝낸 챌린지 — 한 컷씩 보여줘요.
-          </p>
-        </div>
+        <div className="text-sm font-black text-ink-700">오늘의 자랑샷</div>
         <span className="rounded-full bg-coral-50 px-2 py-0.5 text-[10px] font-bold text-coral-600">
           {items.length}개
         </span>
@@ -80,11 +76,19 @@ export function StoryStrip() {
               className="group flex w-16 shrink-0 flex-col items-center gap-1.5"
             >
               <span className={`relative flex h-16 w-16 items-center justify-center rounded-full ${ringCls} transition group-active:scale-95`}>
-                <span
-                  className={`flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br ${s.cover_gradient} text-2xl text-white shadow-card`}
-                >
-                  {s.cover_emoji}
-                </span>
+                {s.image_data_url ? (
+                  <img
+                    src={s.image_data_url}
+                    alt=""
+                    className="h-full w-full rounded-full object-cover shadow-card"
+                  />
+                ) : (
+                  <span
+                    className={`flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br ${s.cover_gradient} text-2xl text-white shadow-card`}
+                  >
+                    {s.cover_emoji}
+                  </span>
+                )}
                 {s.mine && (
                   <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral-500 text-[10px] font-black text-white">
                     ★
@@ -104,17 +108,12 @@ export function StoryStrip() {
         })}
       </div>
 
-      <div className="flex items-center justify-between border-t border-ink-50 bg-coral-50 px-4 py-2.5">
-        <span className="text-[11px] font-bold text-coral-700">
-          ❤️ 진짜 했어요? 한 컷만 자랑해도 누군가 따라합니다
-        </span>
-        <button
-          onClick={() => setShowBrag(true)}
-          className="rounded-full bg-coral-500 px-3 py-1 text-[11px] font-black text-white shadow-card"
-        >
-          자랑하기
-        </button>
-      </div>
+      <button
+        onClick={() => setShowBrag(true)}
+        className="flex w-full items-center justify-center gap-2 border-t border-ink-50 bg-coral-50 px-4 py-2.5 text-[12px] font-black text-coral-700"
+      >
+        📷 사진 한 장 올리기
+      </button>
 
       {openIndex !== null && (
         <StoryViewer

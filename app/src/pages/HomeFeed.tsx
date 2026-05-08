@@ -15,7 +15,7 @@ import { matchScore } from '../lib/personalize'
 import type { Generation, InterestCategory, TrendCardData, UserPrefs } from '../types'
 
 const generationLabel: Record<Generation, string> = {
-  teen: '10대',
+  teen: '10~20대',
   adult: '30·40대',
   senior: '50·60대',
   family: '온 가족',
@@ -127,48 +127,6 @@ export function HomeFeed() {
         </button>
       </header>
 
-      <section className="relative overflow-hidden rounded-[28px] aurora-mesh text-white shadow-card">
-        <div className="absolute inset-0 cover-grain" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-ink-800/45" />
-        <div className="relative p-5">
-          <div className="absolute right-4 top-4 grid grid-cols-2 gap-2 opacity-95">
-            <div className="float-breathe rounded-2xl bg-white/15 px-3 py-2 text-center text-xl backdrop-blur-sm">🍪</div>
-            <div className="float-breathe rounded-2xl bg-coral-500 px-3 py-2 text-center text-xl glow-soft" style={{ animationDelay: '0.4s' }}>🏃</div>
-            <div className="float-breathe rounded-2xl bg-white/15 px-3 py-2 text-center text-xl backdrop-blur-sm" style={{ animationDelay: '0.8s' }}>🥗</div>
-            <div className="float-breathe rounded-2xl bg-white/15 px-3 py-2 text-center text-xl backdrop-blur-sm" style={{ animationDelay: '1.2s' }}>⚾</div>
-          </div>
-
-          <div className="relative max-w-[270px]">
-            <div className="reveal inline-flex rounded-full bg-coral-500 px-3 py-1 text-[11px] font-black glow-soft">
-              보는 것에서 하는 것으로
-            </div>
-            <h2 className="reveal reveal-1 mt-4 break-keep text-3xl font-black leading-tight drop-shadow">
-              숏폼 유행을
-              <br />
-              내 세대 챌린지로
-            </h2>
-            <p className="reveal reveal-2 mt-3 break-keep text-sm leading-relaxed text-white/85">
-              {generationLabel[filter]} · {timeLabel[prefs.time_budget]} · {costLabel[prefs.cost_range]}
-            </p>
-          </div>
-
-          <div className="relative mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-bold text-white/88 backdrop-blur-sm">
-              {participationLabel[prefs.participation_type]}
-            </span>
-            {TRENDS.slice(0, 3).map((trend) => (
-              <button
-                key={trend.id}
-                onClick={() => navigate(`/c/${trend.challenge_id}`)}
-                className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-bold text-white/88 backdrop-blur-sm"
-              >
-                {trend.emoji} {trend.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <StoryStrip />
 
       <TrendToDoCard />
@@ -179,12 +137,7 @@ export function HomeFeed() {
 
       <section className="rounded-2xl bg-white p-3 shadow-card">
         <div className="mb-3 flex items-center justify-between px-1">
-          <div>
-            <h2 className="text-sm font-black text-ink-700">누구 기준으로 볼까요?</h2>
-            <p className="mt-0.5 text-[11px] text-ink-300">
-              세대·지역을 바꾸면 위 추천이 즉시 다시 매칭돼요.
-            </p>
-          </div>
+          <h2 className="text-sm font-black text-ink-700">세대 · 지역</h2>
           <span className="rounded-full bg-coral-50 px-2.5 py-1 text-[11px] font-bold text-coral-600">
             {generationLabel[filter]} · {prefs.region}
           </span>
@@ -204,14 +157,7 @@ export function HomeFeed() {
       <TrendFlow />
 
       <section className="space-y-4">
-        <div className="flex items-end justify-between px-1">
-          <div>
-            <h2 className="text-base font-black text-ink-700">Trend Radar</h2>
-            <p className="mt-0.5 text-[11px] text-ink-300">
-              보고 넘기는 유행을 실제로 할 수 있는 기준으로 나눴어요.
-            </p>
-          </div>
-        </div>
+        <h2 className="px-1 text-base font-black text-ink-700">Trend Radar</h2>
         <div className="space-y-5">
           {radar.map((section) => (
             <RadarRail key={section.title} {...section} />
@@ -223,20 +169,13 @@ export function HomeFeed() {
 
       <Link
         to="/local"
-        className="block overflow-hidden rounded-2xl bg-white p-4 shadow-card"
+        className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card"
       >
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-coral-50 text-2xl">
-            📍
-          </span>
-          <div className="flex-1">
-            <div className="text-sm font-black text-ink-700">내 주변에서 직접 해보기</div>
-            <div className="mt-0.5 text-[11px] text-ink-300">
-              {generationLabel[filter] === '외국인' ? 'Local festivals · workshops · markets · exhibits' : '축제·공방·시장·전시와 챌린지를 연결해 드립니다.'}
-            </div>
-          </div>
-          <span className="text-coral-500">→</span>
-        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-50 text-xl">
+          📍
+        </span>
+        <span className="flex-1 text-sm font-black text-ink-700">내 주변</span>
+        <span className="text-coral-500">→</span>
       </Link>
 
       <section className="space-y-4">
@@ -263,21 +202,17 @@ export function HomeFeed() {
 
 function RadarRail({
   title,
-  sub,
   items,
 }: {
   title: string
-  sub: string
+  sub?: string
   items: { trend: TrendCardData; score: number }[]
 }) {
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between px-1">
-        <div>
-          <h3 className="text-sm font-black text-ink-700">{title}</h3>
-          <p className="mt-0.5 text-[11px] text-ink-300">{sub}</p>
-        </div>
-        <span className="text-[11px] font-bold text-ink-300">{items.length}개</span>
+        <h3 className="text-sm font-black text-ink-700">{title}</h3>
+        <span className="text-[10px] font-bold text-ink-300">{items.length}</span>
       </div>
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 scrollbar-none">
         {items.map((entry) => (

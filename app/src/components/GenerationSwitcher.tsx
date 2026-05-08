@@ -1,7 +1,7 @@
 import type { Generation } from '../types'
 
 const ITEMS: { id: Generation; label: string; sub: string }[] = [
-  { id: 'teen', label: '10대', sub: '트렌디·짧게' },
+  { id: 'teen', label: '10~20대', sub: '트렌디·짧게' },
   { id: 'adult', label: '30·40대', sub: '실용·따뜻' },
   { id: 'senior', label: '50·60대', sub: '친절·단계적' },
   { id: 'family', label: '온 가족', sub: '함께' },

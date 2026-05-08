@@ -14,6 +14,7 @@ export interface StoryItem {
   challenge_id: string
   mood?: string
   mine?: boolean
+  image_data_url?: string
 }
 
 interface Props {
@@ -80,11 +81,21 @@ export function StoryViewer({ stories, startIndex, onClose }: Props) {
         className="relative h-full max-h-[820px] w-full max-w-md overflow-hidden bg-black"
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${story.cover_gradient} cover-grain`}
-        />
-        <div className="absolute inset-0 cover-shine" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/40" />
+        {story.image_data_url ? (
+          <img
+            src={story.image_data_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <>
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${story.cover_gradient} cover-grain`}
+            />
+            <div className="absolute inset-0 cover-shine" />
+          </>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/40" />
 
         {/* progress bars */}
         <div className="absolute inset-x-3 top-3 z-20 flex gap-1">
@@ -127,10 +138,12 @@ export function StoryViewer({ stories, startIndex, onClose }: Props) {
           </button>
         </div>
 
-        {/* big cover emoji center */}
-        <div className="relative z-10 flex h-full items-center justify-center">
-          <div className="text-[180px] drop-shadow-2xl float-breathe">{story.cover_emoji}</div>
-        </div>
+        {/* big cover emoji center — 사진 없을 때만 */}
+        {!story.image_data_url && (
+          <div className="relative z-10 flex h-full items-center justify-center">
+            <div className="text-[180px] drop-shadow-2xl float-breathe">{story.cover_emoji}</div>
+          </div>
+        )}
 
         {/* caption */}
         <div className="pointer-events-none absolute inset-x-4 bottom-24 z-20 text-white">
