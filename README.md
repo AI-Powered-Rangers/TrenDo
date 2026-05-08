@@ -54,6 +54,46 @@ TrendDo Admin은 단순 CMS가 아니라 **AI 문화 운영 관제실**입니다
 - **User Analytics**: 조회, 시작, 완료, 인증, 장소 클릭 등 참여 지표 분석
 - **AI Ops Log**: 모든 LLM 실행의 입력, 출력, 모델명, 프롬프트 버전, 생성 시간을 기록
 
+## 관리자 페이지 스크린샷
+
+최근 구현된 관리자 화면은 “수집 → 선택 → 지역 융합 → 검수 → 제안” 흐름을 한 화면 안에서 시연할 수 있도록 구성되어 있습니다.
+
+### 1. 트렌드 수집 콘솔
+
+실제 API 또는 demo seed 기반으로 수집된 유행을 관리자 선택지에 반영합니다. 수집 진행률과 반영된 트렌드 카드가 함께 표시됩니다.
+
+![Trend collection console](docs/admin-screenshots/trend-collection.png)
+
+### 2. Trend-Do Generator
+
+관리자는 수집된 유행과 기본 샘플 유행 중 1~3개를 선택하고, 지역을 선택해 문화 경험 생성을 시작합니다.
+
+![Trend-Do generator](docs/admin-screenshots/trend-do-generator.png)
+
+### 3. AI Experience Card
+
+LLM은 단순히 `트렌드 + 지역`을 붙이지 않고, 지역 특산품과 유행의 행동 방식을 융합한 새 ToDo 카드를 생성합니다.
+
+![AI experience card](docs/admin-screenshots/experience-card.png)
+
+### 4. 트렌드 클러스터와 행동 전환 점수
+
+수집된 유행은 클러스터 단위로 묶이고, Trend-to-Action Score를 통해 실제 행동형 챌린지로 바꿀 수 있는지 평가합니다.
+
+![Trend cluster and score](docs/admin-screenshots/cluster-score.png)
+
+### 5. K-Culture Map과 XAI 지역 매칭
+
+지역을 클릭하면 특산품, 전통문화, 진행 중인 축제, 문화 자산이 표시됩니다. Local Match는 행동·장소·소재·문화 맥락 기준으로 점수와 근거를 설명합니다.
+
+![Local map and XAI matching](docs/admin-screenshots/local-map-xai.png)
+
+### 6. 지자체 제안 초안
+
+승인 전 자동 발송 없이, 지역 기관에 보낼 협업 제안 메일 초안을 검수 상태로 생성합니다.
+
+![Proposal draft](docs/admin-screenshots/proposal-draft.png)
+
 ## AI 적용 방식
 
 TrendDo는 LLM을 단순 문장 생성기가 아니라 운영 파이프라인 안에 배치합니다.
