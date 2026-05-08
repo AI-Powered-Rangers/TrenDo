@@ -9,6 +9,8 @@ const KEYS = {
   myStories: 'trendo.myStories.v1',
   storiesSeen: 'trendo.storiesSeen.v1',
   doneTrends: 'trendo.doneTrends.v1',
+  userTrends: 'trendo.userTrends.v1',
+  userTrendLikes: 'trendo.userTrendLikes.v1',
 } as const
 
 type StoreKey = keyof typeof KEYS
@@ -22,6 +24,8 @@ const listeners: Record<StoreKey, Set<Listener>> = {
   myStories: new Set(),
   storiesSeen: new Set(),
   doneTrends: new Set(),
+  userTrends: new Set(),
+  userTrendLikes: new Set(),
 }
 
 function notify(key: StoreKey) {
@@ -81,6 +85,7 @@ export const useLikedChallenges = () => useSet('liked')
 export const useJoined = () => useSet('joined')
 export const useLikedPosts = () => useSet('postLikes')
 export const useDoneTrends = () => useSet('doneTrends')
+export const useLikedUserTrends = () => useSet('userTrendLikes')
 
 import type { SetlogEntry } from '../types'
 
@@ -182,6 +187,66 @@ export function useMyStories(): [
         arr.filter((e) => e.id !== id),
       )
       notify('myStories')
+    },
+    [lsKey],
+  )
+
+  return [items, add, remove]
+}
+
+import type { UserTrend, UserTrendCategory } from '../data/userTrends'
+
+export interface NewUserTrend {
+  title: string
+  desc: string
+  category: UserTrendCategory
+  emoji: string
+  cover_gradient: string
+  hashtag?: string
+  region_label?: string
+  image_data_url?: string
+}
+
+export function useUserTrends(): [
+  UserTrend[],
+  (entry: NewUserTrend) => UserTrend,
+  (id: string) => void,
+] {
+  const lsKey = KEYS.userTrends
+  const [items, setItems] = useState<UserTrend[]>(() => readJSON<UserTrend[]>(lsKey, []))
+
+  useEffect(() => {
+    return subscribe('userTrends', () => setItems(readJSON<UserTrend[]>(lsKey, [])))
+  }, [lsKey])
+
+  const add = useCallback(
+    (entry: NewUserTrend) => {
+      const next: UserTrend = {
+        ...entry,
+        id: `ut-mine-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        author_name: '나',
+        author_emoji: '😀',
+        base_likes: 0,
+        base_comments: 0,
+        created_minutes_ago: 0,
+        source: 'mine',
+      }
+      const arr = readJSON<UserTrend[]>(lsKey, [])
+      writeJSON(lsKey, [next, ...arr])
+      notify('userTrends')
+      return next
+    },
+    [lsKey],
+  )
+
+  const remove = useCallback(
+    (id: string) => {
+      const arr = readJSON<UserTrend[]>(lsKey, [])
+      writeJSON(
+        lsKey,
+        arr.filter((e) => e.id !== id),
+      )
+      notify('userTrends')
     },
     [lsKey],
   )

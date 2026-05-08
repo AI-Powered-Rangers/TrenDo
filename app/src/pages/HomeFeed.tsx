@@ -10,6 +10,7 @@ import { PersonalizedHero } from '../components/PersonalizedHero'
 import { HotKeywords } from '../components/HotKeywords'
 import { StoryStrip } from '../components/StoryStrip'
 import { TrendToDoCard } from '../components/TrendToDoCard'
+import { EmergingTrendStrip } from '../components/EmergingTrendStrip'
 import { useUserPrefs } from '../store/userPrefs'
 import { matchScore } from '../lib/personalize'
 import type { Generation, InterestCategory, TrendCardData, UserPrefs } from '../types'
@@ -128,6 +129,8 @@ export function HomeFeed() {
       </header>
 
       <StoryStrip />
+
+      <EmergingTrendStrip />
 
       <TrendToDoCard />
 
