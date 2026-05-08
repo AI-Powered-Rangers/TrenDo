@@ -1,33 +1,187 @@
-# TrenDo
+# TrendDo
 
-> 숏폼 유행을 전 세대가 함께 사는 K문화 플랫폼.
-> *"보는 것에서 하는 것으로."*
+> **보는 유행을, 함께 해보는 문화로 바꾸는 플랫폼**
 
-`files/trend_todo_full.md`, `files/claude_code_prompt.md` 사양 기반의 동작 가능한 데모입니다.
-**완전 클라이언트 데모** — 외부 API 없이 모든 화면이 동작합니다.
+TrendDo는 숏폼과 알고리즘 안에서 빠르게 소비되고 사라지는 유행을 세대별 언어로 번역하고, 실제로 해볼 수 있는 ToDo 챌린지와 지역·전통문화 경험으로 전환하는 AI 문화 순환 플랫폼입니다.
 
-## 실행
+단순히 “요즘 뭐가 유행인지” 보여주는 서비스가 아니라, 유행을 **이해 → 행동 → 지역 연결 → 문화 데이터화**까지 이어지게 만드는 것이 목표입니다.
 
-```bash
-cd app
-npm install
-npm run dev
-# → http://localhost:5173
+## 문제 의식
+
+지금 대중문화는 콘텐츠가 부족한 것이 아니라, 너무 빠르게 소비되고 사라집니다.
+
+- 세대에 따라 같은 유행을 이해하는 방식이 다릅니다.
+- 숏폼 유행은 조회수는 높지만 실제 경험으로 이어지기 어렵습니다.
+- 지역 축제, 전통시장, 공방, 전통문화는 현대 유행과 자연스럽게 연결되기 어렵습니다.
+- 플랫폼은 좋아요와 조회수는 측정하지만, 문화가 실제 생활 속에 남았는지는 잘 보지 않습니다.
+
+TrendDo는 이 문제를 다음 문장으로 정의합니다.
+
+> 알고리즘은 사람을 더 오래 보게 만들지만, 문화는 더 깊게 경험되게 만들지 못한다.
+
+## 해결 방향
+
+TrendDo는 온라인 유행을 실제 문화 경험으로 바꾸는 네 단계 루프를 제공합니다.
+
+| 단계 | 기능 | 설명 |
+|---|---|---|
+| 1. 발견 | Trend Radar | YouTube, Naver, seed 데이터에서 음식, 챌린지, 여행, 숏폼 문화, 미디어 유행을 수집합니다. |
+| 2. 이해 | Generation Guide | 10대, 30·40대, 50·60대, 가족, 외국인에게 맞는 언어로 유행을 설명합니다. |
+| 3. 행동 | Trend-Do Card | 유행을 준비물, 시간, 비용, 단계가 있는 ToDo 챌린지로 바꿉니다. |
+| 4. 재생산 | K-Culture Map / Admin Ops | 지역 자산, 전통문화, 사용자 참여 데이터를 연결해 문화 순환을 시각화합니다. |
+
+## 핵심 기능
+
+### 사용자 앱
+
+- **트렌드 피드**: 최신 유행 카드와 참여형 챌린지 추천
+- **세대별 설명**: 같은 유행을 연령대별로 다르게 설명
+- **Do-It Now**: 준비물, 예상 시간, 비용, 난이도, 단계별 체크리스트 제공
+- **지역·전통문화 리믹스**: 유행을 전통시장, 공방, 축제, 지역 특산품과 연결
+- **셋로그(Setlog)**: 사용자가 문화 경험을 한 줄 기록으로 남김
+- **문화 순환 지도**: 지역별 참여, 연결, 문화 잔존 흐름을 시각화
+
+### 관리자 웹
+
+TrendDo Admin은 단순 CMS가 아니라 **AI 문화 운영 관제실**입니다.
+
+- **트렌드 수집 콘솔**: 실제 API 또는 demo seed 기반 트렌드 수집
+- **Trend-Do Generator**: 선택한 유행 1~3개와 지역을 융합해 새 문화 경험 생성
+- **지역 매칭 엔진**: 트렌드의 행동 유형과 지역 자산의 체험 가능성을 점수화
+- **Safety Gate**: 초상권, 개인정보, 위험 행동, 문화 왜곡 가능성 검수
+- **AI 카드 생성**: 세대별 ToDo, 문화 맥락, 안전 문구, XAI 근거를 포함한 카드 생성
+- **Proposal Studio**: 지자체·기관 제안 메일 초안 생성
+- **User Analytics**: 조회, 시작, 완료, 인증, 장소 클릭 등 참여 지표 분석
+- **AI Ops Log**: 모든 LLM 실행의 입력, 출력, 모델명, 프롬프트 버전, 생성 시간을 기록
+
+## AI 적용 방식
+
+TrendDo는 LLM을 단순 문장 생성기가 아니라 운영 파이프라인 안에 배치합니다.
+
+```mermaid
+flowchart LR
+  A["트렌드 수집"] --> B["LLM 구조화 분석"]
+  B --> C["안전성 검수"]
+  C --> D["지역/전통문화 매칭"]
+  D --> E["세대별 ToDo 카드 생성"]
+  E --> F["관리자 승인"]
+  F --> G["사용자 앱 공개"]
+  G --> H["사용자 로그 분석"]
+  H --> B
 ```
 
-빌드/프리뷰:
+### LLM이 하는 일
 
-```bash
-npm run build && npm run preview
+- 트렌드 맥락 요약
+- 세대별 설명 생성
+- 유행을 행동형 ToDo로 변환
+- 지역 특산품·전통문화와 융합 아이디어 생성
+- 안전성 검토
+- 지자체 제안 메일 생성
+- 사용자 로그 기반 개선안 생성
+
+### LLM이 자동으로 하지 않는 일
+
+- 사용자 화면 자동 공개
+- 제안 메일 자동 발송
+- 위험도 high 콘텐츠 승인
+- 개인정보 원문 저장
+
+모든 AI 생성 결과는 관리자 검수 상태로 시작합니다.
+
+## 지역 융합 예시
+
+TrendDo는 단순히 `트렌드 + 지역`을 붙이지 않고, 실제로 수행 가능한 새 경험으로 융합합니다.
+
+| 입력 | 나쁜 예 | TrendDo 방식 |
+|---|---|---|
+| 두바이쫀득쿠키 + 강원 | 두바이쫀득쿠키 강원 체험 | 감자떡 쫀득 디저트 챌린지 |
+| 포토 챌린지 + 전주 | 전주 포토 챌린지 | 한옥 골목 한 컷 리믹스 |
+| 러닝크루 + 진주 | 진주 러닝크루 | 남강 유등 야간 무브 코스 |
+| 꾸미기 유행 + 전통공예 | 전통공예 꾸미기 | 자개 패턴 키링 리믹스 |
+
+## XAI 설계
+
+AI 판단 결과는 Explanation Card로 표시됩니다.
+
+- 최종 점수 또는 판단
+- 상위 기여 요인
+- 감점 요인
+- 사용 데이터 출처
+- 모델명
+- 프롬프트 버전
+- 생성 시간
+- 관리자 검수 상태
+
+지역 매칭 점수는 다음 요소를 사용합니다.
+
+| 항목 | 설명 |
+|---|---|
+| 카테고리 적합성 | 음식은 시장/먹거리/카페/축제처럼 기본 용도부터 맞는지 검토 |
+| 행동 적합성 | 먹기, 만들기, 찍기, 걷기, 보기 등 유행의 핵심 행동과 지역 자산 체험 비교 |
+| 소재·문화 맥락 | 재료, 전통 요소, 문화 키워드가 겹치는지 확인 |
+| 장소 논리성 | 실제 수행 장소로 자연스러운지 판단 |
+| 일정/운영성 | 진행 중 행사 또는 상시 운영 여부 |
+| 안전/검수 부담 | 초상권, 개인정보, 위험 행동 가능성 감점 |
+
+## 데이터 출처 정책
+
+TrendDo는 가짜 수치를 실제 데이터처럼 보여주지 않습니다.
+
+| 라벨 | 의미 |
+|---|---|
+| `real_api` | 실제 API 또는 OpenAI 호출에 성공한 데이터 |
+| `demo_seed` | API 키가 없을 때 사용하는 데모용 seed 데이터 |
+| `mock_data` | 실제 연동 전 구조 검증용 임시 데이터 |
+| `derived` | 수집 데이터와 AI 분석을 바탕으로 생성된 파생 데이터 |
+
+## 기술 스택
+
+| 영역 | 기술 |
+|---|---|
+| Frontend | React, TypeScript, Vite, Tailwind CSS |
+| Admin UI | React, Recharts 스타일 차트, SVG 기반 지도/시각화 |
+| Backend | Node.js, Express, TypeScript |
+| AI | OpenAI Responses API, Structured Output, Embedding |
+| Validation | Zod schema |
+| Data Store | 로컬 JSON store, SQLite fallback 지향 구조 |
+| External APIs | YouTube Data API, Naver DataLab/Search, 공공데이터 포털 확장 구조 |
+
+## 프로젝트 구조
+
+```text
+TrenDo/
+├── app/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── HomeFeed.tsx
+│   │   │   ├── ChallengeDetail.tsx
+│   │   │   ├── CultureMapPage.tsx
+│   │   │   ├── Community.tsx
+│   │   │   ├── Setlog.tsx
+│   │   │   └── Admin.tsx
+│   │   ├── components/
+│   │   ├── data/
+│   │   └── lib/
+│   └── package.json
+├── server/
+│   ├── src/
+│   │   ├── admin/
+│   │   │   ├── aiClient.ts
+│   │   │   ├── providers.ts
+│   │   │   ├── routes.ts
+│   │   │   ├── schemas.ts
+│   │   │   ├── scoring.ts
+│   │   │   └── seed.ts
+│   │   └── index.ts
+│   └── package.json
+├── .env.example
+└── README.md
 ```
 
-> `server/` 폴더에는 관리자용 AI 운영 API가 구현되어 있습니다.
-> `OPENAI_API_KEY`가 있으면 OpenAI LLM/Embedding을 호출하고, 키가 없으면 모든 생성 결과와 데이터에
-> `demo_seed` 배지를 붙여 실행됩니다.
+## 실행 방법
 
-## 관리자 AI 운영 서버
-
-### 실행
+### 1. 서버 실행
 
 ```bash
 cd server
@@ -36,7 +190,13 @@ cp ../.env.example .env
 npm run dev
 ```
 
-다른 터미널에서 프론트:
+기본 서버 주소:
+
+```text
+http://localhost:8787
+```
+
+### 2. 프론트 실행
 
 ```bash
 cd app
@@ -44,75 +204,85 @@ npm install
 npm run dev
 ```
 
-관리자 화면: `/admin`
+기본 앱 주소:
 
-### 환경변수
+```text
+http://localhost:5174
+```
 
-`.env.example`에 다음 키를 제공합니다.
+주요 화면:
 
-| key | 설명 |
+| 경로 | 설명 |
 |---|---|
-| `OPENAI_API_KEY` | 있으면 실제 LLM/Embedding 호출 |
-| `OPENAI_MODEL` | 기본 `gpt-4.1-mini` |
-| `OPENAI_EMBEDDING_MODEL` | 기본 `text-embedding-3-small` |
-| `DATA_GO_KR_API_KEY`, `TOUR_API_KEY`, `CULTURE_API_KEY` | 공공데이터 fetcher 확장용. 현재는 provider 구조와 demo fallback 제공 |
-| `CULTURE_API_URL` | 문화시설/행사 JSON API endpoint. `CULTURE_API_KEY`와 함께 있으면 live culture asset provider 사용 |
-| `TREND_RSS_URLS` | 쉼표로 구분한 RSS/Atom 트렌드 소스. 있으면 live trend provider 사용 |
-| `TREND_CSV_URL` | `title,description,source_url,hashtags,category,views_24h,saves` 헤더를 가진 CSV URL |
-| `YOUTUBE_API_KEY` | 있으면 음식/여행/액티비티/숏츠 소비문화 카테고리별 YouTube 영상 신호를 수집 |
-| `INSTAGRAM_ACCESS_TOKEN` | 승인된 Instagram Graph API/hashtag source 연결용. 공개 전체 트렌드 탐색은 공식 API 제약상 기본 비활성 |
-| `INSTAGRAM_TREND_CSV_URL` | Instagram/Reels 리서치 결과를 CSV로 연결할 때 사용하는 확장용 URL |
-| `KAKAO_MAP_API_KEY`, `VITE_KAKAO_MAP_API_KEY` | 관리자 지도용 Kakao JavaScript 키 |
-| `DATABASE_URL` | 있으면 향후 DB 연결 기준. 현재 구현은 로컬 JSON store를 SQLite fallback처럼 사용 |
+| `/` | 사용자 홈 피드 |
+| `/admin` | 관리자 AI 문화 운영 관제실 |
+| `/map` | 문화 순환 지도 |
+| `/community` | 커뮤니티 피드 |
+| `/setlog` | 셋로그 |
+| `/saved` | 저장한 챌린지 |
+| `/me` | 내 문화 로그 |
 
-### demo_seed와 real_api 차이
+## 환경변수
 
-- `real_api`: `OPENAI_API_KEY`로 실제 OpenAI API 호출에 성공한 LLM/Embedding 결과입니다.
-- `demo_seed`: API 키가 없거나 외부 데이터 API가 연결되지 않은 상태의 seed/fallback 데이터입니다.
-- `mock_data`: 공공데이터 키는 감지됐지만 provider가 아직 실제 endpoint로 완성되지 않은 경우의 명시적 stub 표시입니다.
+실제 API를 사용하려면 `.env`에 키를 넣습니다. `.env`는 git에 올리지 않습니다.
 
-트렌드 수집은 검색어 급상승어를 기본값으로 쓰지 않습니다. 기본 루프는 `food`, `travel`, `activity`, `shorts_culture` 카테고리별 YouTube provider를 우선 사용하고, 키가 없으면 같은 카테고리 구조의 `demo_seed`를 표시합니다. `TREND_RSS_URLS`는 뉴스/검색 신호를 보조로 보고 싶을 때만 명시적으로 켭니다.
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
-관리자 UI는 모든 데이터와 AI 결과에 provenance badge를 표시합니다. AI 생성 챌린지, 제안 메일, 리포트는 항상 검수 필요 상태로 시작하며 관리자 승인 없이 공개/발송되지 않습니다.
+YOUTUBE_API_KEY=
+NAVER_CLIENT_ID=
+NAVER_CLIENT_SECRET=
 
-### 관리자 API
+DATA_GO_KR_API_KEY=
+TOUR_API_KEY=
+CULTURE_API_KEY=
+CULTURE_API_URL=
 
-| method | route |
-|---|---|
-| `GET` | `/api/admin/state` |
-| `POST` | `/api/admin/collect/trends` |
-| `POST` | `/api/admin/collect/local-assets` |
-| `POST` | `/api/admin/ai/embed` |
-| `POST` | `/api/admin/ai/cluster-trends` |
-| `POST` | `/api/admin/ai/run-learning-loop` |
-| `POST` | `/api/admin/ai/generate-trend-context` |
-| `POST` | `/api/admin/ai/translate-by-generation` |
-| `POST` | `/api/admin/ai/generate-challenge` |
-| `POST` | `/api/admin/ai/review-safety` |
-| `POST` | `/api/admin/ai/match-local-assets` |
-| `POST` | `/api/admin/ai/generate-proposal` |
-| `GET` | `/api/admin/analytics/summary` |
-| `POST` | `/api/admin/analytics/diagnose` |
-| `POST` | `/api/admin/reports/generate` |
-| `GET` | `/api/admin/reports/:id/pdf` |
-| `GET` | `/api/admin/ai-runs` |
+TREND_RSS_URLS=
+TREND_CSV_URL=
+INSTAGRAM_ACCESS_TOKEN=
+INSTAGRAM_TREND_CSV_URL=
 
-### LLM schema 검증
+DATABASE_URL=file:./data/trendo-admin.sqlite
+```
 
-서버의 [`server/src/admin/schemas.ts`](server/src/admin/schemas.ts)는 Zod schema로 다음 structured output을 검증합니다.
+## 주요 관리자 API
+
+| Method | Route | 설명 |
+|---|---|---|
+| `GET` | `/api/admin/state` | 관리자 전체 상태 조회 |
+| `POST` | `/api/admin/collect/trends` | 트렌드 수집 |
+| `POST` | `/api/admin/collect/local-assets` | 지역 자산 수집 |
+| `POST` | `/api/admin/ai/generate-experience-card` | Trend-Do 경험 카드 생성 |
+| `POST` | `/api/admin/ai/generate-challenge` | 챌린지 생성 |
+| `POST` | `/api/admin/ai/review-safety` | 안전성 검수 |
+| `POST` | `/api/admin/ai/match-local-assets` | 지역 자산 매칭 |
+| `POST` | `/api/admin/ai/generate-proposal` | 제안 메일 초안 생성 |
+| `GET` | `/api/admin/analytics/summary` | 사용자 로그 분석 |
+| `POST` | `/api/admin/reports/generate` | 임팩트 리포트 생성 |
+| `GET` | `/api/admin/ai-runs` | AI 실행 로그 |
+
+## Structured Output 검증
+
+LLM 출력은 `server/src/admin/schemas.ts`의 Zod schema로 검증합니다.
 
 - `TrendContextSchema`
 - `GenerationTranslationSchema`
 - `ChallengeGenerationSchema`
 - `SafetyReviewSchema`
 - `LocalMatchExplanationSchema`
+- `LocalMatchVerificationSchema`
 - `ProposalEmailSchema`
 - `AnalyticsDiagnosisSchema`
 - `ImpactReportSchema`
+- `TrendCardPackageSchema`
+- `ExperienceCardSchema`
 
-검증 실패 또는 API 키 부재 시 `demo_seed_fallback` 결과를 저장하고 `AiRun.status=fallback`, `provenance_label=demo_seed`로 기록합니다.
+검증 실패 또는 API 키 부재 시 fallback 결과를 저장하고, `AiRun.status=fallback`, `provenance_label=demo_seed`로 기록합니다.
 
-### 테스트
+## 테스트
 
 ```bash
 cd server
@@ -121,119 +291,24 @@ npm test
 
 테스트 범위:
 
-- Local Match Score, Trend-to-Action Score 계산
-- analytics metric의 0 나누기 방지
-- LLM JSON schema validation 실패 감지
+- Local Match Score 계산
+- Trend-to-Action Score 계산
+- Analytics metric의 0 나누기 방지
+- LLM JSON schema validation 실패 처리
 
-## 구현된 기능
+## 시연 시나리오
 
-### 핵심 (사양 6개 기능)
-- **숏폼 → 챌린지 변환** (`HomeFeed`, `ChallengeDetail`) — 검색창에 키워드 → 챌린지 카드. "AI로 다시 번역" 클릭 시 클라이언트 mock AI가 세대·지역에 맞춰 카드를 즉석 리믹스 + **번역 근거 3줄 표시**(XAI).
-- **세대별 번역** — 4개 세대 스위치, 화면 폰트도 세대에 맞춰 조정.
-- **지역 재해석** — 8개 지역 + 지역별 변형 (쑥/흑임자/한라봉/유자/커피 두쫀쿠 등).
-- **전통문화 자연 삽입** — "사실 이건 OO의 현대판이에요" 접기/펼치기.
-- **문화 잔존율** — 0~100 점수 + D+7/D+30/취미化/가족공유 지표.
-- **문화 순환 지도** — SVG 한국 지도 + 시간 슬라이더 리플레이.
+1. 사용자 홈에서 유행 카드를 확인합니다.
+2. 세대별 설명을 바꿔 같은 유행이 다르게 번역되는 것을 보여줍니다.
+3. 관리자 `/admin`으로 이동합니다.
+4. 트렌드 수집 버튼을 눌러 실제 API 또는 demo seed 기반 유행을 수집합니다.
+5. Trend-Do Generator에서 유행 1~3개와 지역을 선택합니다.
+6. LLM으로 지역 융합 ToDo 카드를 생성합니다.
+7. Safety Gate와 XAI 점수 근거를 확인합니다.
+8. 관리자 승인 후 사용자 앱에 제안할 수 있음을 보여줍니다.
 
-### 능동 참여 레이어 (이번 추가)
-- **셋로그 (Setlog)** `/setlog` — 매일 한 줄 기록, 기분 이모지, 챌린지·자유 태그, **연속 기록 스트릭**. 하단 ＋ 버튼으로 어디서든 작성.
-- **저장 / 좋아요 / 참여 / 공유** — 모든 챌린지 카드에 4-버튼 SocialBar. 저장은 [`/saved`](app/src/pages/Saved.tsx)에 누적, 좋아요·참여는 카운터 즉시 반영, 공유는 `navigator.share` → 클립보드 폴백.
-- **커뮤니티 피드** `/community` — 다른 가족·세대가 만든 인증 게시물. 인기/최신 + 세대 필터, 게시물 좋아요·공유·"따라하기" 액션. 챌린지 상세에도 미리보기 스트립 포함.
-- **내 피드 허브** `/me` — 저장·참여·좋아요·셋로그 스트릭을 한 화면. 잔존율·관리자 콘솔·세대/지역 설정 진입점.
+## 팀이 강조하는 가치
 
-### 관리자용 XAI 콘솔 `/admin`
-관리자는 "지금 무엇이 유행이고, **왜** 그런지"를 모델 가중치 수준에서 볼 수 있습니다.
+TrendDo는 유행을 더 많이 소비하게 만드는 서비스가 아닙니다.
 
-- **트렌드 랭킹** — 6개 피처의 가중합으로 산출한 AI 점수 + 상승/정체/하락 화살표.
-- **기여도 분해** — 각 트렌드 행을 펼치면 6개 피처별 가중치(w<sub>i</sub>) × 값(v<sub>i</sub>) 막대. 가장 큰 기여 피처는 코랄로 강조.
-- **자연어 설명** — "왜 이 점수인가" + 모델 한계(caveat) — 표본 부족, 절기성 등.
-- **클러스터 뷰** — 유행 임베딩 군집, 핵심 노드 챌린지와 성장률.
-- **커뮤니티 트렌딩** — 24h 활성 해시태그, 게시물·참여율·세대 균형도 + XAI 한 줄 설명.
-
-피처 6종 (모두 0~100, 가중치 합 1):
-| key | weight | 의미 |
-|---|---:|---|
-| view_growth | 0.18 | 24h 신규 시청 변화율 |
-| generation_diversity | 0.22 | 4개 세대 도달의 균형도 |
-| region_spread | 0.18 | 8개 지역 중 평균 이상 활동 비율 |
-| tradition_link | 0.14 | AI 탐지 유행↔전통 연결 신뢰도 |
-| family_share | 0.18 | 가족 단위 공유 비율 |
-| retention | 0.10 | 7일 후 재수행 비율 |
-
-> 이 값들은 [`app/src/data/admin.ts`](app/src/data/admin.ts)에 시드되어 있고,
-> 실서비스에선 동일 스키마로 백엔드 모델 출력으로 대체할 수 있게 두었습니다.
-
-## 라우트
-
-| 경로 | 화면 |
-|---|---|
-| `/` | 홈 피드 (트렌드 카드 + 커뮤니티 인기 스트립) |
-| `/c/:id` | 챌린지 상세 (세대·지역 번역, SocialBar, 전통, 단계, 잔존율, 커뮤니티) |
-| `/community` | 커뮤니티 피드 (인기/최신, 세대 필터) |
-| `/setlog` | 셋로그 (오늘의 한 줄 + 스트릭) |
-| `/saved` | 저장한 챌린지 |
-| `/map` | 문화 순환 지도 |
-| `/retention` | 문화 잔존율 |
-| `/me` | 내 피드 허브 |
-| `/admin` | 관리자 XAI 콘솔 |
-
-## 데이터·상태
-
-- AI 번역: [`app/src/lib/api.ts`](app/src/lib/api.ts) — 클라이언트 시뮬레이션. 외부 호출 없음.
-- 사용자 활동(저장·좋아요·참여·셋로그·게시물 좋아요): [`app/src/lib/social.ts`](app/src/lib/social.ts) — `localStorage` 기반, 같은 키를 구독하는 컴포넌트끼리 즉시 동기화.
-- 시드: [`app/src/data/`](app/src/data/) — `trends`, `regions`, `community`, `retention`, `admin`.
-
-## 발표 시연 시나리오 (8단계)
-
-1. **홈 피드** → 두바이 쫀득쿠키 카드 클릭. 상단에 "오늘 인기 인증" 가로 스트립도 같이 노출.
-2. **세대 50·60대로 전환** → 제목·후크·폰트가 부드럽게 바뀜.
-3. **지역 전주로 전환** → "흑임자 두쫀쿠" 변형 + 풍남문 시장 연결.
-4. **AI로 다시 번역** 클릭 → 0.9초 후 카드 리믹스 + XAI 근거 3줄.
-5. **참여·저장·공유** → SocialBar에서 한 번에. 토스트 즉시 피드백.
-6. **단계 체크 모두 완료** → 잔존율 71점 등장 + 셋로그 컴포저 자동 노출 → 한 줄 기록.
-7. **커뮤니티** 탭 → 흑임자·한강 버터런 등 다른 가족의 인증 + 따라하기.
-8. **관리자(`/admin`)** → 두쫀쿠 #1 행 펼치기 → "가족 공유율 0.18×95 + 세대 다양성 0.22×89가 1위 만든 이유" + 표본 부족 caveat → 커뮤니티 탭에서 #흑임자두쫀쿠 24h 4.2× 상승.
-
-## 구조
-
-```
-TrenDo/
-├── app/
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   └── src/
-│       ├── App.tsx
-│       ├── pages/
-│       │   ├── Onboarding.tsx
-│       │   ├── HomeFeed.tsx
-│       │   ├── ChallengeDetail.tsx
-│       │   ├── Community.tsx
-│       │   ├── Setlog.tsx
-│       │   ├── Saved.tsx
-│       │   ├── CultureMapPage.tsx
-│       │   ├── RetentionPage.tsx
-│       │   ├── MePage.tsx
-│       │   └── Admin.tsx       ← XAI 콘솔
-│       ├── components/
-│       │   ├── BottomNav.tsx        (＋ FAB로 셋로그 컴포저 진입)
-│       │   ├── SocialBar.tsx        (참여·좋아요·저장·공유)
-│       │   ├── CommunityPost.tsx
-│       │   ├── CommunityStrip.tsx
-│       │   ├── SetlogComposer.tsx
-│       │   ├── SetlogEntry.tsx
-│       │   ├── XAIBar.tsx           (피처 가중치×값 시각화)
-│       │   ├── Toast.tsx
-│       │   └── …
-│       ├── data/
-│       │   ├── trends.ts
-│       │   ├── regions.ts
-│       │   ├── retention.ts
-│       │   ├── community.ts
-│       │   └── admin.ts             (XAI 점수·클러스터·해시태그)
-│       └── lib/
-│           ├── api.ts               (mock AI · 외부 호출 없음)
-│           ├── social.ts            (저장·좋아요·셋로그 localStorage)
-│           └── format.ts
-└── server/                           (선택 — 데모엔 사용 X)
-```
+TrendDo는 유행을 세대, 지역, 전통문화, 실제 행동으로 다시 연결해 **문화가 생활 속에서 지속되도록 만드는 서비스**입니다.
