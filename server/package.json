@@ -5,18 +5,25 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "build": "tsc --noEmit",
+    "test": "tsx --test src/admin/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "fast-xml-parser": "^5.7.3",
+    "openai": "^6.37.0",
+    "pdfkit": "^0.18.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.9.0",
+    "@types/pdfkit": "^0.17.6",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

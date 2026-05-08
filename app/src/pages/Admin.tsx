@@ -1,828 +1,635 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ADMIN_TREND_SCORES,
-  AI_PIPELINE,
-  CLUSTERS,
-  COMMUNITY_TRENDING,
-  FEATURE_DESCRIPTION,
-  MODEL_HEALTH,
-  XAI_GUARDRAILS,
-} from '../data/admin'
-import { TRENDS, findChallenge } from '../data/trends'
-import { XAIBar } from '../components/XAIBar'
-import { formatCount, formatPct, formatViews } from '../lib/format'
-import type { AdminTrendScore, XAIFeature } from '../types'
+import { adminApi, AdminState, AiRun, Challenge, LocalMatch, ScoreFactor, Trend } from '../lib/adminApi'
+import { formatCount } from '../lib/format'
 
-const TABS = [
-  { id: 'rank', label: '트렌드 XAI', eyebrow: 'Score Ledger' },
-  { id: 'cluster', label: 'AI 클러스터', eyebrow: 'Embeddings' },
-  { id: 'community', label: '커뮤니티 신호', eyebrow: 'Trend Candidates' },
+const MENUS = [
+  'Home Dashboard',
+  'Trend Control Tower',
+  'Trend Intelligence',
+  'Challenge Studio',
+  'Safety & Ethics Gate',
+  'Local Asset Matching',
+  'Proposal Studio',
+  'User Analytics',
+  'Impact Report Center',
+  'AI Ops / Model Run Log',
 ] as const
 
-type Tab = (typeof TABS)[number]['id']
+type Menu = (typeof MENUS)[number]
 
 export function AdminPage() {
-  const [tab, setTab] = useState<Tab>('rank')
-  const [selectedId, setSelectedId] = useState<string>(
-    ADMIN_TREND_SCORES[0]?.challenge_id ?? '',
-  )
+  const [state, setState] = useState<AdminState | null>(null)
+  const [menu, setMenu] = useState<Menu>('Home Dashboard')
+  const [loading, setLoading] = useState('초기화 중')
+  const [error, setError] = useState('')
+  const [selectedTrendId, setSelectedTrendId] = useState('')
+  const [selectedChallengeId, setSelectedChallengeId] = useState('')
+  const [diagnosis, setDiagnosis] = useState<any>(null)
+  const [briefing, setBriefing] = useState<any>(null)
+  const [translations, setTranslations] = useState<any>(null)
+
+  const refresh = async () => {
+    setError('')
+    const next = await adminApi.state()
+    setState(next)
+    setSelectedTrendId((current) => current || next.trends[0]?.id || '')
+    setSelectedChallengeId((current) => current || next.challenges[0]?.id || '')
+    setLoading('')
+  }
+
+  useEffect(() => {
+    refresh().catch((e) => {
+      setError(String(e))
+      setLoading('')
+    })
+  }, [])
+
+  const selectedTrend = state?.trends.find((trend) => trend.id === selectedTrendId) ?? state?.trends[0]
+  const selectedChallenge = state?.challenges.find((challenge) => challenge.id === selectedChallengeId) ?? state?.challenges[0]
+  const latestSafety = state?.safetyReviews.find((review) => review.challenge_id === selectedChallenge?.id)
+  const selectedMatch = state?.localMatches[0]
+
+  async function run(label: string, action: () => Promise<unknown>) {
+    setLoading(label)
+    setError('')
+    try {
+      const result = await action()
+      if (label.includes('진단')) setDiagnosis((result as any).diagnosis)
+      if (label.includes('브리핑')) setBriefing((result as any).briefing)
+      if (label.includes('세대별')) setTranslations((result as any).translations)
+      await refresh()
+    } catch (e) {
+      setError(String(e))
+      setLoading('')
+    }
+  }
+
+  if (!state) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0A1020] text-white">
+        <div>
+          <div className="text-sm font-bold text-coral-300">TrendDo Admin</div>
+          <div className="mt-2 text-2xl font-black">{loading || '관리자 관제실 연결 중'}</div>
+          {error && <p className="mt-3 max-w-xl text-sm text-red-200">{error}</p>}
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FC] text-ink-700">
-      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <AdminSidebar tab={tab} setTab={setTab} />
-
-        <main className="min-w-0 flex-1 space-y-6">
-          <AdminHero />
-
-          <div className="grid grid-cols-3 gap-2 lg:hidden">
-            {TABS.map((t) => (
+    <div className="min-h-screen bg-[#F4F7FB] text-ink-700">
+      <div className="grid min-h-screen lg:grid-cols-[284px_minmax(0,1fr)]">
+        <aside className="bg-[#081126] p-5 text-white">
+          <Link to="/" className="text-xs font-bold text-coral-200">← 사용자 화면</Link>
+          <div className="mt-8 text-[11px] font-black uppercase tracking-[0.22em] text-coral-200">
+            AI Culture Ops
+          </div>
+          <h1 className="mt-2 text-2xl font-black leading-tight">TrendDo Admin<br />운영 관제실</h1>
+          <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
+            <Badge label={`LLM ${state.runtime.llm}`} tone={state.runtime.llm === 'real_api' ? 'good' : 'demo'} />
+            <Badge label={`DATA ${state.runtime.dataApis}`} tone={state.runtime.dataApis === 'configured' ? 'good' : 'demo'} />
+          </div>
+          <nav className="mt-7 space-y-1">
+            {MENUS.map((item) => (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`rounded-2xl px-3 py-3 text-left transition ${
-                  tab === t.id
-                    ? 'bg-ink-700 text-white shadow-card'
-                    : 'bg-white text-ink-400 shadow-card'
+                key={item}
+                onClick={() => setMenu(item)}
+                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold transition ${
+                  menu === item ? 'bg-coral-500 text-white' : 'text-white/68 hover:bg-white/8 hover:text-white'
                 }`}
               >
-                <div className="text-[10px] font-bold uppercase tracking-[0.12em] opacity-70">
-                  {t.eyebrow}
-                </div>
-                <div className="mt-1 text-xs font-black">{t.label}</div>
+                {item}
               </button>
             ))}
-          </div>
+          </nav>
+        </aside>
 
-          <PipelineStrip />
+        <main className="min-w-0 p-4 sm:p-6 lg:p-8">
+          <header className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.18em] text-coral-600">{menu}</div>
+              <h2 className="mt-1 text-3xl font-black text-ink-800">AI 문화 운영 관제실</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-400">
+                수집, 임베딩, LLM 생성, 점수화, 안전 검수, 지역 매칭, 사용자 로그 분석이 모두 AI Run으로 기록됩니다.
+                API 키가 없으면 모든 결과는 명시적으로 demo_seed 배지를 달고 표시됩니다.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Action onClick={() => run('트렌드 수집 중', adminApi.collectTrends)}>트렌드 수집</Action>
+              <Action onClick={() => run('지역 자산 수집 중', adminApi.collectLocalAssets)}>지역 자산 수집</Action>
+              <Action onClick={() => run('임베딩 생성 중', adminApi.embed)}>임베딩 생성</Action>
+              <Action onClick={() => run('클러스터링 중', adminApi.clusterTrends)}>클러스터링</Action>
+              <Action onClick={() => run('AI learning loop 실행 중', adminApi.runLearningLoop)}>AI 루프 실행</Action>
+            </div>
+          </header>
 
-          {tab === 'rank' && (
-            <RankTab selectedId={selectedId} setSelectedId={setSelectedId} />
-          )}
-          {tab === 'cluster' && <ClusterTab />}
-          {tab === 'community' && <CommunityTab />}
+          {loading && <div className="mt-4 rounded-lg bg-ink-800 px-4 py-3 text-sm font-bold text-white">{loading}</div>}
+          {error && <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>}
+
+          <section className="mt-6">
+            {menu === 'Home Dashboard' && <HomeDashboard state={state} briefing={briefing} onBriefing={() => run('AI 오늘의 브리핑 생성 중', adminApi.briefing)} />}
+            {menu === 'Trend Control Tower' && <TrendControl state={state} selectedTrend={selectedTrend} onSelectTrend={setSelectedTrendId} />}
+            {menu === 'Trend Intelligence' && (
+              <TrendIntelligence
+                state={state}
+                selectedTrend={selectedTrend}
+                translations={translations}
+                onTranslate={() => selectedTrend && run('세대별 번역 생성 중', () => adminApi.translateByGeneration(selectedTrend.id))}
+              />
+            )}
+            {menu === 'Challenge Studio' && (
+              <ChallengeStudio
+                state={state}
+                selectedTrend={selectedTrend}
+                selectedChallenge={selectedChallenge}
+                onSelectChallenge={setSelectedChallengeId}
+                onGenerate={() => selectedTrend && run('LLM 챌린지 생성 중', () => adminApi.generateChallenge(selectedTrend.id))}
+                onHeritage={() => selectedChallenge && run('Heritage Remix 생성 중', () => adminApi.heritageRemix(selectedChallenge.id, selectedChallenge.trend_id))}
+              />
+            )}
+            {menu === 'Safety & Ethics Gate' && (
+              <SafetyGate
+                challenge={selectedChallenge}
+                review={latestSafety}
+                onReview={() => selectedChallenge && run('Safety Gate 실행 중', () => adminApi.reviewSafety(selectedChallenge.id))}
+                onDecision={(status) => selectedChallenge && run(`관리자 ${status} 처리 중`, () => adminApi.decideChallenge(selectedChallenge.id, status))}
+              />
+            )}
+            {menu === 'Local Asset Matching' && (
+              <LocalMatching
+                state={state}
+                challenge={selectedChallenge}
+                onMatch={() => selectedChallenge && run('지역 매칭 계산 중', () => adminApi.matchLocalAssets(selectedChallenge.id, selectedChallenge.trend_id))}
+              />
+            )}
+            {menu === 'Proposal Studio' && (
+              <ProposalStudio
+                state={state}
+                match={selectedMatch}
+                onGenerate={() => selectedMatch && run('제안 메일 초안 생성 중', () => adminApi.generateProposal(selectedMatch.id))}
+              />
+            )}
+            {menu === 'User Analytics' && (
+              <UserAnalytics state={state} diagnosis={diagnosis} onDiagnose={() => run('Challenge Doctor 진단 중', adminApi.diagnose)} />
+            )}
+            {menu === 'Impact Report Center' && <ImpactReports state={state} onGenerate={() => run('성과 리포트 생성 중', adminApi.generateReport)} />}
+            {menu === 'AI Ops / Model Run Log' && <AiOps runs={state.aiRuns} />}
+          </section>
         </main>
       </div>
     </div>
   )
 }
 
-function AdminSidebar({
-  tab,
-  setTab,
-}: {
-  tab: Tab
-  setTab: (tab: Tab) => void
-}) {
+function HomeDashboard({ state, briefing, onBriefing }: { state: AdminState; briefing: any; onBriefing: () => void }) {
+  const latestRun = state.aiRuns[0]
+  const mediumOrHigh = state.safetyReviews.filter((review) => review.risk_level !== 'low').length
   return (
-    <aside className="hidden w-72 shrink-0 lg:block">
-      <div className="sticky top-5 space-y-4">
-        <div className="rounded-3xl bg-ink-800 p-5 text-white shadow-card">
-          <Link to="/" className="text-xs font-bold text-coral-200">
-            ← 사용자 화면으로
-          </Link>
-          <div className="mt-7 text-[11px] font-black uppercase tracking-[0.28em] text-coral-200">
-            TrenDo Admin
+    <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Metric label="수집 트렌드" value={state.trends.length} sub="Trend table" />
+        <Metric label="지역 자산" value={state.localAssets.length} sub="LocalAsset table" />
+        <Metric label="검수 대기 챌린지" value={state.challenges.filter((c) => c.status !== 'published').length} sub="No auto publish" />
+        <Metric label="시작률" value={`${state.analytics.start_rate}%`} sub="challenge_start / view" />
+        <Metric label="완료율" value={`${state.analytics.completion_rate}%`} sub="complete / start" />
+        <Metric label="AI Run" value={state.aiRuns.length} sub={latestRun?.model_name ?? 'not yet'} />
+        <Metric label="위험 알림" value={mediumOrHigh} sub="medium/high safety" />
+        <Metric label="지역 매칭 후보" value={state.localMatches.length} sub="Local Bridge AI" />
+      </div>
+      <Panel title="운영 원칙 상태">
+        <StatusRow label="자동 공개" value="차단됨" tone="good" />
+        <StatusRow label="자동 이메일 발송" value="차단됨" tone="good" />
+        <StatusRow label="개인정보" value="user_id_hash + age_band" tone="good" />
+        <StatusRow label="데이터 출처" value={state.runtime.llm === 'real_api' ? 'real_api 포함' : 'demo_seed 표시'} tone={state.runtime.llm === 'real_api' ? 'good' : 'demo'} />
+      </Panel>
+      <Panel title="AI 오늘의 브리핑">
+        <Action onClick={onBriefing}>수치 기반 브리핑 생성</Action>
+        {briefing ? (
+          <div className="mt-4 space-y-3">
+            <h3 className="text-xl font-black">{briefing.headline}</h3>
+            <p className="text-sm leading-relaxed text-ink-500">{briefing.briefing}</p>
+            <List title="추천 액션" items={briefing.recommended_actions ?? []} />
+            <List title="위험 알림" items={briefing.risk_alerts ?? []} />
           </div>
-          <h1 className="mt-2 text-2xl font-black leading-tight">
-            AI 유행 관제
-            <br />
-            XAI 콘솔
-          </h1>
-          <p className="mt-3 text-xs leading-relaxed text-white/70">
-            숏폼 조회수만 보는 화면이 아니라, 세대 번역·지역 확산·전통 연결·잔존 신호가
-            어떤 근거로 점수가 됐는지 추적합니다.
-          </p>
-        </div>
+        ) : <Empty text="조회·시작·완료·위험·지역 매칭 데이터를 바탕으로 운영 브리핑을 생성합니다." />}
+      </Panel>
+    </div>
+  )
+}
 
-        <nav className="space-y-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`w-full rounded-2xl px-4 py-3 text-left transition ${
-                tab === t.id
-                  ? 'bg-coral-500 text-white shadow-card'
-                  : 'bg-white text-ink-500 shadow-card hover:text-ink-700'
-              }`}
-            >
-              <div className="text-[10px] font-bold uppercase tracking-[0.12em] opacity-70">
-                {t.eyebrow}
+function TrendControl({ state, selectedTrend, onSelectTrend }: { state: AdminState; selectedTrend?: Trend; onSelectTrend: (id: string) => void }) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
+      <Panel title="트렌드 클러스터 맵">
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MiniChart title="급상승 점수" items={state.trends.map((trend) => [trend.title, trend.surge_score?.total ?? 0])} />
+          <MiniChart title="행동 전환 점수" items={state.trends.map((trend) => [trend.title, trend.action_score?.total ?? 0])} />
+          <MiniChart title="안전/실행 후보" items={state.trends.map((trend) => [trend.category, trend.action_score?.factors.find((factor) => factor.key === 'safety_score')?.value ?? 0])} />
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {state.trendClusters.length ? state.trendClusters.map((cluster, index) => (
+            <button key={cluster.id} className="rounded-lg border border-ink-100 bg-white p-4 text-left">
+              <div className="flex items-center justify-between">
+                <strong>{cluster.name}</strong>
+                <span className="text-xl font-black text-coral-600">{cluster.cluster_score}</span>
               </div>
-              <div className="mt-1 text-sm font-black">{t.label}</div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {cluster.representative_keywords.map((keyword) => <span key={keyword} className="rounded bg-coral-50 px-2 py-1 text-xs font-bold text-coral-700">#{keyword}</span>)}
+              </div>
+              <div className="mt-4 h-2 rounded-full bg-ink-100">
+                <div className="h-2 rounded-full bg-coral-500" style={{ width: `${Math.min(100, 24 + index * 18)}%` }} />
+              </div>
+            </button>
+          )) : <Empty text="클러스터링 버튼을 눌러 TrendCluster를 생성하세요." />}
+        </div>
+      </Panel>
+      <Panel title="Trend-to-Action Score">
+        <SelectList items={state.trends} selected={selectedTrend?.id} onSelect={onSelectTrend} />
+        {selectedTrend?.surge_score && <ScoreBreakdown breakdown={selectedTrend.surge_score} compact />}
+        {selectedTrend?.action_score && <ScoreBreakdown breakdown={selectedTrend.action_score} />}
+        {selectedTrend && <ExplanationCard title={selectedTrend.title} provenance={selectedTrend.provenance_label} model="Trend Radar AI · feature contribution" generatedAt={selectedTrend.collected_at} sources={[selectedTrend.source, ...(selectedTrend.evidence_refs ?? [])]} limits={['점수 모델은 SHAP 대체용 feature contribution이며, LLM 자기 설명이 아닙니다.']} />}
+      </Panel>
+    </div>
+  )
+}
+
+function TrendIntelligence({ state, selectedTrend, translations, onTranslate }: { state: AdminState; selectedTrend?: Trend; translations: any; onTranslate: () => void }) {
+  const latest = state.aiRuns.find((run) => run.module_name === 'generateTrendContext')
+  return (
+    <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+      <Panel title="수집된 트렌드">
+        <div className="space-y-3">
+          {state.trends.map((trend) => <TrendRow key={trend.id} trend={trend} active={trend.id === selectedTrend?.id} />)}
+        </div>
+      </Panel>
+      <Panel title="LLM Trend Context">
+        <Action onClick={onTranslate}>세대별 번역 생성</Action>
+        {latest ? <JsonBlock value={latest.output_json} /> : <Empty text="Challenge Studio에서 챌린지를 생성하면 trend context AI Run이 남습니다." />}
+        {latest && <ExplanationFromRun run={latest} />}
+        {translations && (
+          <div className="mt-4">
+            <h3 className="mb-3 text-sm font-black">세대별 설명 비교표</h3>
+            <div className="grid gap-2 md:grid-cols-2">
+              {(translations.variants ?? []).map((variant: any) => (
+                <div key={variant.age_band} className="rounded-lg border border-ink-100 bg-white p-3">
+                  <div className="text-xs font-black text-coral-600">{variant.age_band}</div>
+                  <div className="mt-1 font-black">{variant.title}</div>
+                  <p className="mt-1 text-xs text-ink-400">{variant.hook}</p>
+                  <p className="mt-2 text-[11px] font-bold text-amber-700">주의: {variant.caution}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Panel>
+    </div>
+  )
+}
+
+function ChallengeStudio({ state, selectedTrend, selectedChallenge, onSelectChallenge, onGenerate, onHeritage }: { state: AdminState; selectedTrend?: Trend; selectedChallenge?: Challenge; onSelectChallenge: (id: string) => void; onGenerate: () => void; onHeritage: () => void }) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
+      <Panel title="AI 챌린지 생성">
+        <p className="text-sm text-ink-400">선택 트렌드: <strong>{selectedTrend?.title ?? '없음'}</strong></p>
+        <Action onClick={onGenerate} wide>LLM 챌린지 초안 생성</Action>
+        <Action onClick={onHeritage} wide>Heritage Remix 생성</Action>
+        <div className="mt-4 space-y-2">
+          {state.challenges.map((challenge) => (
+            <button key={challenge.id} onClick={() => onSelectChallenge(challenge.id)} className={`w-full rounded-lg border p-3 text-left ${selectedChallenge?.id === challenge.id ? 'border-coral-400 bg-coral-50' : 'border-ink-100 bg-white'}`}>
+              <div className="font-black">{challenge.title}</div>
+              <div className="mt-1 flex gap-2 text-xs"><Badge label={challenge.status} tone="demo" /><Badge label={challenge.provenance_label} tone={challenge.provenance_label === 'real_api' ? 'good' : 'demo'} /></div>
             </button>
           ))}
-        </nav>
-
-        <div className="rounded-3xl bg-white p-4 shadow-card">
-          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-300">
-            Model Health
-          </div>
-          <div className="mt-3 space-y-3">
-            {MODEL_HEALTH.map((m) => (
-              <div key={m.label} className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-xs font-bold text-ink-700">{m.label}</div>
-                  <div className="mt-0.5 text-[10px] leading-relaxed text-ink-300">
-                    {m.detail}
-                  </div>
+        </div>
+      </Panel>
+      <Panel title="검수 대기 초안">
+        {selectedChallenge ? (
+          <>
+            <div className="flex flex-wrap items-center gap-2"><h3 className="text-xl font-black">{selectedChallenge.title}</h3><Badge label="검수 필요" tone="demo" /></div>
+            <p className="mt-3 text-sm leading-relaxed text-ink-500">{selectedChallenge.description}</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <Metric label="비용" value={`${formatCount(selectedChallenge.estimated_cost)}원`} sub={selectedChallenge.difficulty} />
+              <Metric label="시간" value={`${selectedChallenge.estimated_minutes}분`} sub={selectedChallenge.target_age_band} />
+              <Metric label="공개 버튼" value="승인 전 비활성" sub="human gate" />
+            </div>
+            {selectedChallenge.score_breakdown && <ScoreBreakdown breakdown={selectedChallenge.score_breakdown} />}
+            {selectedChallenge.generation_variants?.length ? (
+              <div className="mt-5">
+                <h3 className="text-sm font-black">1인/가족/외국인 버전</h3>
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  {selectedChallenge.generation_variants.map((variant) => (
+                    <div key={variant.age_band} className="rounded-lg bg-ink-50 p-3">
+                      <div className="text-xs font-black text-coral-600">{variant.age_band}</div>
+                      <div className="mt-1 text-sm font-black">{variant.title}</div>
+                      <p className="mt-1 text-xs text-ink-400">{variant.hook}</p>
+                    </div>
+                  ))}
                 </div>
-                <span className={`text-sm font-black ${healthToneClass(m.tone)}`}>
-                  {m.value}
-                </span>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </aside>
-  )
-}
-
-function AdminHero() {
-  const totalViews = TRENDS.reduce((sum, trend) => sum + trend.views_24h, 0)
-  const avgConfidence =
-    ADMIN_TREND_SCORES.reduce((sum, row) => sum + row.confidence, 0) /
-    ADMIN_TREND_SCORES.length
-  const watchCount = ADMIN_TREND_SCORES.filter((row) => row.risk_level !== 'low').length
-
-  return (
-    <header className="overflow-hidden rounded-[28px] bg-ink-800 text-white shadow-card">
-      <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-coral-500 px-3 py-1 text-[11px] font-black">
-              TrenDo Score v0.3
-            </span>
-            <span className="rounded-full border border-white/15 px-3 py-1 text-[11px] font-bold text-white/80">
-              XAI Attribution · 15분 갱신
-            </span>
-          </div>
-          <h2 className="mt-5 max-w-3xl text-3xl font-black leading-tight sm:text-4xl">
-            관리자는 “무엇이 떴나”보다
-            <br />
-            “왜 뜨고, 무엇을 해야 하나”를 봅니다.
-          </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/72">
-            조회 성장, 세대 다양성, 지역 확산, 전통 연결, 가족 공유, 잔존율을 같은
-            점수 체계로 정규화하고 모든 랭킹에 설명 가능한 근거 로그를 붙였습니다.
-          </p>
-
-          <div className="mt-7 grid overflow-hidden rounded-2xl border border-white/10 sm:grid-cols-4">
-            <HeroMetric label="24h 조회 신호" value={formatViews(totalViews)} />
-            <HeroMetric label="평균 신뢰도" value={formatPct(avgConfidence)} />
-            <HeroMetric label="감시 필요" value={`${watchCount}건`} />
-            <HeroMetric label="활성 모델" value="6피처" />
-          </div>
-        </div>
-
-        <div className="border-t border-white/10 bg-white/[0.06] p-4 sm:p-6 lg:border-l lg:border-t-0">
-          <AIFusionVisual />
-        </div>
-      </div>
-    </header>
-  )
-}
-
-function HeroMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-b border-r border-white/10 p-4 last:border-r-0 sm:border-b-0">
-      <div className="text-[11px] text-white/55">{label}</div>
-      <div className="mt-1 text-2xl font-black text-white">{value}</div>
+            ) : null}
+            {selectedChallenge.heritage_remix && (
+              <div className="mt-5 rounded-lg border border-ink-100 bg-white p-4">
+                <h3 className="text-sm font-black">Heritage Remix AI</h3>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {selectedChallenge.heritage_remix.heritage_elements.map((item) => <span key={item} className="rounded bg-coral-50 px-2 py-1 text-xs font-bold text-coral-700">{item}</span>)}
+                </div>
+                <ScoreBreakdown breakdown={selectedChallenge.heritage_remix.appropriateness_score} compact />
+                <List title="문화 적합성 주의" items={selectedChallenge.heritage_remix.cautions} />
+              </div>
+            )}
+          </>
+        ) : <Empty text="생성된 챌린지가 없습니다." />}
+      </Panel>
     </div>
   )
 }
 
-function PipelineStrip() {
+function SafetyGate({ challenge, review, onReview, onDecision }: { challenge?: Challenge; review?: any; onReview: () => void; onDecision: (status: 'approved' | 'rejected' | 'needs_review') => void }) {
+  const highRisk = review?.risk_level === 'high'
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-3 px-1">
-        <div>
-          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-coral-600">
-            AI Technology Stack
-          </div>
-          <h2 className="text-xl font-black text-ink-700">유행을 챌린지로 번역하는 모델 흐름</h2>
-        </div>
-        <p className="max-w-xl text-xs leading-relaxed text-ink-300">
-          실제 데모는 클라이언트 시뮬레이션이지만, 관리자 화면은 향후 백엔드 모델이
-          붙었을 때 그대로 보여줄 판단 체계를 먼저 제품화했습니다.
-        </p>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        {AI_PIPELINE.map((stage, index) => (
-          <article key={stage.id} className="rounded-2xl bg-white p-4 shadow-card">
-            <div className="flex items-center justify-between">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-700 text-xs font-black text-white">
-                {index + 1}
-              </span>
-              <span className="rounded-full bg-coral-50 px-2 py-1 text-[10px] font-bold text-coral-600">
-                {stage.tech}
-              </span>
+    <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+      <Panel title="Safety & Ethics Gate">
+        <Action onClick={onReview} wide>Safety Review 실행</Action>
+        {review ? (
+          <>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {['physical', 'privacy', 'copyright'].map((risk, i) => <RiskBar key={risk} label={risk} value={review.risk_level === 'high' ? 90 - i * 8 : review.risk_level === 'medium' ? 58 - i * 7 : 22 + i * 4} />)}
             </div>
-            <h3 className="mt-4 text-sm font-black text-ink-700">{stage.label}</h3>
-            <p className="mt-2 text-xs leading-relaxed text-ink-400">{stage.output}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function AIFusionVisual() {
-  const modules = [
-    { label: 'Signal AI', sub: '실시간 유행 감지' },
-    { label: 'Embedding AI', sub: '멀티모달 유사도' },
-    { label: 'Translator AI', sub: '세대별 말투 변환' },
-    { label: 'Culture RAG', sub: '전통 근거 검색' },
-  ]
-  const outputs = ['챌린지 번역', '근거 로그', '운영 액션']
-
-  return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-ink-800/70 p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-black uppercase tracking-[0.2em] text-coral-200">
-            AI Fusion Lab
-          </div>
-          <h3 className="mt-1 break-keep text-base font-black leading-snug text-white sm:text-lg">
-            여러 AI가 모여 하나의 판단으로 융합
-          </h3>
-        </div>
-        <div className="hidden rounded-full border border-white/10 px-3 py-1 text-[10px] font-bold text-white/65 sm:block">
-          live simulation
-        </div>
-      </div>
-
-      <div className="relative mt-4 overflow-hidden rounded-3xl bg-[#0A102C] p-4">
-        <svg
-          className="absolute inset-0 h-full w-full"
-          viewBox="0 0 420 360"
-          role="img"
-          aria-label="다섯 개의 AI 모듈이 중앙 TrenDo Fusion Core로 모여 점수와 설명을 만드는 시각화"
-        >
-          <defs>
-            <linearGradient id="fusionStream" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0%" stopColor="#FFC0A4" />
-              <stop offset="52%" stopColor="#FF5C2A" />
-              <stop offset="100%" stopColor="#8EE7D2" />
-            </linearGradient>
-            <filter id="fusionGlow">
-              <feGaussianBlur stdDeviation="5" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          <path className="fusion-stream fusion-delay-0" d="M90 70 C132 96 166 118 198 156" />
-          <path className="fusion-stream fusion-delay-1" d="M330 70 C288 96 254 118 222 156" />
-          <path className="fusion-stream fusion-delay-2" d="M90 148 C132 154 166 160 190 172" />
-          <path className="fusion-stream fusion-delay-3" d="M330 148 C288 154 254 160 230 172" />
-          <path className="fusion-stream fusion-delay-4" d="M210 226 C210 246 210 266 210 292" />
-
-          <g filter="url(#fusionGlow)">
-            <circle className="fusion-ring fusion-ring-a" cx="210" cy="178" r="72" />
-            <circle className="fusion-ring fusion-ring-b" cx="210" cy="178" r="51" />
-            <circle className="fusion-core-pulse" cx="210" cy="178" r="34" />
-          </g>
-
-          <g className="fusion-packet fusion-delay-0">
-            <circle r="4">
-              <animateMotion dur="3.5s" repeatCount="indefinite" path="M90 70 C132 96 166 118 198 156" />
-            </circle>
-          </g>
-          <g className="fusion-packet fusion-delay-1">
-            <circle r="4">
-              <animateMotion dur="3.5s" repeatCount="indefinite" path="M330 70 C288 96 254 118 222 156" />
-            </circle>
-          </g>
-          <g className="fusion-packet fusion-delay-2">
-            <circle r="4">
-              <animateMotion dur="3.5s" repeatCount="indefinite" path="M90 148 C132 154 166 160 190 172" />
-            </circle>
-          </g>
-          <g className="fusion-packet fusion-delay-3">
-            <circle r="4">
-              <animateMotion dur="3.5s" repeatCount="indefinite" path="M330 148 C288 154 254 160 230 172" />
-            </circle>
-          </g>
-          <g className="fusion-packet fusion-delay-4">
-            <circle r="4">
-              <animateMotion dur="3.5s" repeatCount="indefinite" path="M210 226 C210 246 210 266 210 292" />
-            </circle>
-          </g>
-        </svg>
-
-        <div className="relative z-10">
-          <div className="grid grid-cols-2 gap-2">
-            {modules.map((m, index) => (
-              <div
-                key={m.label}
-                className="fusion-node"
-                style={{ animationDelay: `${index * 0.22}s` }}
-              >
-                <div className="truncate text-[11px] font-black text-white">{m.label}</div>
-                <div className="mt-0.5 truncate text-[10px] text-white/55">{m.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mx-auto my-7 w-40 text-center">
-            <div className="fusion-core-card rounded-2xl border border-coral-200/40 bg-coral-500/95 px-4 py-3 shadow-card">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-coral-100">
-              Core
-            </div>
-            <div className="mt-1 text-sm font-black leading-tight text-white">
-              TrenDo Fusion
-            </div>
-            <div className="mt-1 font-mono text-[10px] text-white/75">Σ AI → XAI</div>
-            </div>
-          </div>
-
-          <div className="fusion-judge mx-auto mb-4 max-w-[240px] rounded-2xl border border-white/12 bg-white/10 px-4 py-3 text-center">
-            <div className="text-xs font-black text-white">XAI Judge</div>
-            <div className="mt-1 text-[10px] text-white/55">기여도·리스크 판정</div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {outputs.map((output, index) => (
-            <div
-              key={output}
-              className="fusion-output rounded-2xl border border-white/10 bg-white/10 px-2 py-2 text-center text-[10px] font-bold leading-tight text-white sm:text-[11px]"
-              style={{ animationDelay: `${0.4 + index * 0.2}s` }}
-            >
-              {output}
-            </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {XAI_GUARDRAILS.slice(0, 3).map((g) => (
-          <div key={g.label} className="rounded-2xl bg-white/7 px-3 py-2">
-            <div className="flex items-start gap-3">
-              <div className="w-16 shrink-0 text-[11px] font-black text-white">{g.label}</div>
-              <p className="break-keep text-[10px] leading-relaxed text-white/58">{g.body}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function RankTab({
-  selectedId,
-  setSelectedId,
-}: {
-  selectedId: string
-  setSelectedId: (id: string) => void
-}) {
-  const sorted = useMemo(
-    () => [...ADMIN_TREND_SCORES].sort((a, b) => b.total - a.total),
-    [],
-  )
-  const selected = sorted.find((row) => row.challenge_id === selectedId) ?? sorted[0]
-  const strongest = getTopFeature(selected)
-  const weakest = getWeakestFeature(selected)
-
-  return (
-    <div className="space-y-5">
-      <section className="grid gap-3 md:grid-cols-3">
-        <InsightTile
-          label="랭킹 1위 판단"
-          value={findChallenge(sorted[0].challenge_id)?.title ?? '트렌드'}
-          detail={`AI 점수 ${sorted[0].total} · ${getTopFeature(sorted[0])?.label ?? '핵심 피처'} 기여`}
-        />
-        <InsightTile
-          label="가장 강한 설명 피처"
-          value={strongest?.label ?? '분석 중'}
-          detail={strongest ? `${strongest.weight.toFixed(2)} × ${strongest.value} = ${getContribution(strongest).toFixed(1)}` : ''}
-        />
-        <InsightTile
-          label="보정이 필요한 신호"
-          value={weakest?.label ?? '분석 중'}
-          detail={weakest ? `${weakest.value}점 · 운영 액션에서 보완 권장` : ''}
-        />
-      </section>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.02fr)_minmax(390px,0.98fr)]">
-        <section className="space-y-3">
-          {sorted.map((row, idx) => (
-            <RankingRow
-              key={row.challenge_id}
-              row={row}
-              rank={idx + 1}
-              selected={selected.challenge_id === row.challenge_id}
-              onSelect={() => setSelectedId(row.challenge_id)}
-            />
-          ))}
-        </section>
-
-        <section className="space-y-4 xl:sticky xl:top-5 xl:self-start">
-          <ScoreBreakdown row={selected} />
-          <EvidencePanel row={selected} />
-        </section>
-      </div>
-    </div>
-  )
-}
-
-function RankingRow({
-  row,
-  rank,
-  selected,
-  onSelect,
-}: {
-  row: AdminTrendScore
-  rank: number
-  selected: boolean
-  onSelect: () => void
-}) {
-  const challenge = findChallenge(row.challenge_id)
-  const top = getTopFeature(row)
-  const trend = TRENDS.find((t) => t.challenge_id === row.challenge_id)
-  const direction = directionMeta(row.trend_direction)
-  const risk = riskMeta(row.risk_level)
-
-  if (!challenge || !top) return null
-
-  return (
-    <button
-      onClick={onSelect}
-      className={`w-full rounded-2xl border p-4 text-left transition ${
-        selected
-          ? 'border-coral-300 bg-white shadow-card ring-2 ring-coral-100'
-          : 'border-transparent bg-white shadow-card hover:border-ink-100'
-      }`}
-    >
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-ink-50 text-xl">
-          {challenge.emoji}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-black text-ink-300">#{rank}</span>
-            <h3 className="text-base font-black text-ink-700">{challenge.title}</h3>
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${direction.className}`}>
-              {direction.label}
-            </span>
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${risk.className}`}>
-              {risk.label}
-            </span>
-          </div>
-          <p className="mt-1 text-xs leading-relaxed text-ink-400">
-            최대 기여: {top.label} · {top.weight.toFixed(2)} × {top.value} =
-            {' '}
-            {getContribution(top).toFixed(1)}
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="text-3xl font-black text-coral-600">{row.total}</div>
-          <div className="text-[10px] font-bold text-ink-300">AI SCORE</div>
-        </div>
-      </div>
-
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-ink-50">
-        <div className="h-full rounded-full bg-coral-500" style={{ width: `${row.total}%` }} />
-      </div>
-
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Mini label="신뢰도" value={formatPct(row.confidence)} />
-        <Mini label="표본" value={formatCount(row.sample_size)} />
-        <Mini label="24h 조회" value={trend ? formatViews(trend.views_24h) : '-'} />
-      </div>
-    </button>
-  )
-}
-
-function ScoreBreakdown({ row }: { row: AdminTrendScore }) {
-  const challenge = findChallenge(row.challenge_id)
-  const top = getTopFeature(row)
-  const computed = row.features.reduce((sum, feature) => sum + getContribution(feature), 0)
-
-  if (!challenge || !top) return null
-
-  return (
-    <article className="rounded-3xl bg-white p-5 shadow-card">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-coral-600">
-            XAI Score Decomposition
-          </div>
-          <h3 className="mt-1 text-xl font-black text-ink-700">
-            {challenge.emoji} {challenge.title}
-          </h3>
-        </div>
-        <Link
-          to={`/c/${row.challenge_id}`}
-          className="rounded-full bg-ink-700 px-3 py-1.5 text-xs font-bold text-white"
-        >
-          상세 보기
-        </Link>
-      </div>
-
-      <div className="mt-5 grid grid-cols-3 gap-3 border-y border-ink-100 py-4">
-        <Metric label="AI 점수" value={row.total} />
-        <Metric label="계산값" value={computed.toFixed(1)} />
-        <Metric label="신뢰도" value={formatPct(row.confidence)} />
-      </div>
-
-      <div className="mt-5 space-y-4">
-        {row.features.map((feature) => (
-          <XAIBar
-            key={feature.key}
-            feature={feature}
-            highlight={feature.key === top.key}
-            description={FEATURE_DESCRIPTION[feature.key]}
-            showFormula
-          />
-        ))}
-      </div>
-
-      <div className="mt-5 border-t border-ink-100 pt-4">
-        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-300">
-          Natural Language Explanation
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-ink-600">{row.top_reason}</p>
-        {row.caveat && (
-          <p className="mt-3 border-l-4 border-coral-500 pl-3 text-xs leading-relaxed text-coral-700">
-            {row.caveat}
-          </p>
-        )}
-      </div>
-    </article>
-  )
-}
-
-function EvidencePanel({ row }: { row: AdminTrendScore }) {
-  const risk = riskMeta(row.risk_level)
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-      <article className="rounded-3xl bg-white p-5 shadow-card">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-base font-black text-ink-700">근거 로그</h3>
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${risk.className}`}>
-            {risk.label}
-          </span>
-        </div>
-        <div className="mt-4 space-y-3">
-          {row.model_trace.map((trace, idx) => (
-            <div key={trace} className="flex gap-3 border-t border-ink-50 pt-3 first:border-t-0 first:pt-0">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-700 text-[10px] font-black text-white">
-                {idx + 1}
-              </span>
-              <p className="text-xs leading-relaxed text-ink-500">{trace}</p>
-            </div>
-          ))}
-        </div>
-      </article>
-
-      <article className="rounded-3xl bg-white p-5 shadow-card">
-        <h3 className="text-base font-black text-ink-700">운영 액션</h3>
-        <p className="mt-3 text-sm leading-relaxed text-ink-600">{row.recommended_action}</p>
-        <div className="mt-4 space-y-2 border-t border-ink-100 pt-4">
-          {row.evidence.map((item) => (
-            <div key={item} className="flex items-start gap-2 text-xs text-ink-500">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-coral-500" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </article>
-    </div>
-  )
-}
-
-function ClusterTab() {
-  return (
-    <div className="space-y-5">
-      <section className="grid gap-3 md:grid-cols-3">
-        <InsightTile label="클러스터링" value="HDBSCAN" detail="임베딩 거리 기반 유행 묶음" />
-        <InsightTile label="핵심 노드" value="두쫀쿠" detail="한 입 K푸드 중심 트렌드" />
-        <InsightTile label="성장 1위" value="표정·인증샷" detail="+61% · 진입 장벽 0" />
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        {CLUSTERS.map((cluster) => (
-          <article key={cluster.id} className="rounded-3xl bg-white p-5 shadow-card">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-3xl">{cluster.emoji}</div>
-                <h3 className="mt-3 text-xl font-black text-ink-700">{cluster.label}</h3>
-              </div>
-              <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                  cluster.growth > 0.3
-                    ? 'bg-coral-50 text-coral-600'
-                    : cluster.growth > 0.1
-                    ? 'bg-amber-50 text-amber-700'
-                    : 'bg-ink-50 text-ink-400'
-                }`}
-              >
-                +{Math.round(cluster.growth * 100)}%
-              </span>
-            </div>
-
-            <p className="mt-3 text-sm leading-relaxed text-ink-500">{cluster.description}</p>
-
-            <div className="mt-5 border-y border-ink-100 py-4">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-bold text-ink-400">신호 강도</span>
-                <span className="font-black text-ink-700">{cluster.signal_strength}</span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-50">
-                <div
-                  className="h-full rounded-full bg-ink-700"
-                  style={{ width: `${cluster.signal_strength}%` }}
-                />
-              </div>
-              <div className="mt-3 text-[11px] leading-relaxed text-ink-300">
-                {cluster.method}
-              </div>
-            </div>
-
+            <div className="mt-4"><Badge label={`risk: ${review.risk_level}`} tone={review.risk_level === 'low' ? 'good' : 'demo'} /></div>
+            <p className="mt-3 text-sm leading-relaxed">{review.explanation}</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {cluster.challenge_ids.map((id) => {
-                const challenge = findChallenge(id)
-                if (!challenge) return null
-                return (
-                  <Link
-                    key={id}
-                    to={`/c/${id}`}
-                    className="rounded-full bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink-500"
-                  >
-                    {challenge.emoji} {challenge.title}
-                  </Link>
-                )
-              })}
+              <button onClick={() => onDecision('approved')} disabled={highRisk} className={`rounded-lg px-4 py-2 text-sm font-black ${highRisk ? 'bg-ink-100 text-ink-300' : 'bg-emerald-600 text-white'}`}>승인</button>
+              <button onClick={() => onDecision('needs_review')} className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-black text-white">수정 후 재검수</button>
+              <button onClick={() => onDecision('rejected')} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-black text-white">반려</button>
             </div>
+          </>
+        ) : <Empty text="아직 안전 검토가 없습니다." />}
+      </Panel>
+      <Panel title="위험 문구 하이라이트 / Diff">
+        {challenge && <p className="rounded-lg bg-ink-50 p-4 text-sm leading-relaxed">{highlightText(challenge.description, review?.flagged_text_spans ?? [])}</p>}
+        {review && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <DiffBox title="수정 전" text={`${challenge?.description ?? ''}\n${challenge?.safety_notice ?? ''}`} />
+            <DiffBox title="수정 후" text={review.suggested_revision} good />
+          </div>
+        )}
+      </Panel>
+    </div>
+  )
+}
 
-            <div className="mt-5 border-t border-ink-100 pt-4">
-              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-coral-600">
-                Next Action
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-ink-500">{cluster.next_action}</p>
-              <div className="mt-3 text-[11px] text-ink-300">
-                포스트 {formatCount(cluster.size)}개
-              </div>
+function LocalMatching({ state, challenge, onMatch }: { state: AdminState; challenge?: Challenge; onMatch: () => void }) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[1fr_390px]">
+      <Panel title="지도 기반 LocalAsset">
+        <Action onClick={onMatch}>Local Match Score 계산</Action>
+        <div className="relative mt-4 h-[390px] overflow-hidden rounded-lg bg-[#E9F4EF]">
+          {state.localAssets.map((asset, index) => (
+            <div key={asset.id} className="absolute rounded-full bg-coral-500 px-3 py-1 text-xs font-black text-white shadow-card" style={{ left: `${18 + (index * 27) % 62}%`, top: `${20 + (index * 19) % 55}%` }}>
+              {asset.region_code}
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel title="추천 이유">
+        {state.localMatches.length ? state.localMatches.slice(0, 4).map((match) => {
+          const asset = state.localAssets.find((item) => item.id === match.local_asset_id)
+          return (
+            <div key={match.id} className="mb-4 rounded-lg border border-ink-100 bg-white p-4">
+              <div className="flex items-center justify-between"><strong>{asset?.name}</strong><span className="text-2xl font-black text-coral-600">{match.match_score}</span></div>
+              <p className="mt-2 text-xs leading-relaxed text-ink-400">{match.explanation}</p>
+              <ScoreBreakdown breakdown={match.score_breakdown} compact />
+            </div>
+          )
+        }) : <Empty text={`${challenge?.title ?? '챌린지'}에 대해 매칭 버튼을 눌러보세요.`} />}
+      </Panel>
+    </div>
+  )
+}
+
+function ProposalStudio({ state, match, onGenerate }: { state: AdminState; match?: LocalMatch; onGenerate: () => void }) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
+      <Panel title="제안 생성">
+        <p className="text-sm text-ink-400">실제 발송은 SMTP 설정과 관리자 승인 전까지 차단됩니다.</p>
+        <Action onClick={onGenerate} wide>제안 메일 초안 생성</Action>
+        <div className="mt-4 text-xs text-ink-300">선택 매치: {match?.id ?? '없음'}</div>
+      </Panel>
+      <Panel title="Proposal Drafts">
+        {state.proposals.length ? state.proposals.map((proposal) => (
+          <article key={proposal.id} className="mb-4 rounded-lg border border-ink-100 bg-white p-4">
+            <div className="flex flex-wrap items-center gap-2"><h3 className="font-black">{proposal.subject}</h3><Badge label={proposal.status} tone="demo" /></div>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-500">{proposal.body}</p>
+            <div className="mt-3 text-xs font-bold text-ink-300">관리자 승인 전 자동 발송 없음</div>
+          </article>
+        )) : <Empty text="LocalMatch 생성 후 제안 초안을 만들 수 있습니다." />}
+      </Panel>
+    </div>
+  )
+}
+
+function UserAnalytics({ state, diagnosis, onDiagnose }: { state: AdminState; diagnosis: any; onDiagnose: () => void }) {
+  const a = state.analytics
+  const funnel = [
+    ['view', a.total_views, 'trend_card_view'],
+    ['start', a.total_starts, 'challenge_start / trend_card_view * 100'],
+    ['complete', a.total_completions, 'challenge_complete / challenge_start * 100'],
+    ['proof', a.total_proofs, 'proof_upload / challenge_complete * 100'],
+  ] as const
+  return (
+    <div className="grid gap-4 xl:grid-cols-[1fr_390px]">
+      <Panel title="KPI / Funnel">
+        <div className="grid gap-3 md:grid-cols-5">
+          <Metric label="총 사용자" value={a.segment_breakdown_json.unique_users ?? 0} sub="distinct user_id_hash" />
+          <Metric label="저장률" value={`${a.segment_breakdown_json.save_rate ?? 0}%`} sub="save / view * 100" />
+          <Metric label="시작률" value={`${a.start_rate}%`} sub="start / view * 100" />
+          <Metric label="완료율" value={`${a.completion_rate}%`} sub="complete / start * 100" />
+          <Metric label="인증률" value={`${a.proof_rate}%`} sub="proof / complete * 100" />
+          <Metric label="장소 클릭률" value={`${a.place_click_rate}%`} sub="place_click / view * 100" />
+          <Metric label="지도 열람률" value={`${a.map_open_rate ?? 0}%`} sub="map_open / place_click * 100" />
+          <Metric label="방문 인증 전환율" value={`${a.visit_conversion_rate}%`} sub="location_verified_proof / place_click * 100" />
+        </div>
+        <div className="mt-6 space-y-3">
+          {funnel.map(([label, value, formula], index) => (
+            <div key={label} title={formula}>
+              <div className="flex justify-between text-xs font-bold text-ink-400"><span>{label}</span><span>{value}</span></div>
+              <div className="mt-1 h-7 rounded bg-ink-100"><div className="h-7 rounded bg-coral-500" style={{ width: `${Math.max(8, (value / Math.max(1, a.total_views)) * 100)}%`, opacity: 1 - index * 0.13 }} /></div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <MiniChart title="세대별 코호트" items={Object.entries(a.segment_breakdown_json.by_age_band ?? {}) as [string, number][]} />
+          <MiniChart title="지역별 히트맵" items={Object.entries(a.segment_breakdown_json.by_region ?? {}) as [string, number][]} />
+          <MiniChart title="단계별 이탈률" items={Object.entries(a.segment_breakdown_json.step_drop_off_rate ?? {}) as [string, number][]} />
+        </div>
+      </Panel>
+      <Panel title="Challenge Doctor">
+        <Action onClick={onDiagnose} wide>분석 진단 생성</Action>
+        {diagnosis ? <JsonBlock value={diagnosis} /> : <div className="mt-4 space-y-2">{state.doctorTargets.map((target) => <StatusRow key={target.challenge_id} label={target.challenge_id} value={`${target.completion_rate}% 완료`} tone="demo" />)}</div>}
+      </Panel>
+    </div>
+  )
+}
+
+function ImpactReports({ state, onGenerate }: { state: AdminState; onGenerate: () => void }) {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[340px_1fr]">
+      <Panel title="기관 제출용 리포트">
+        <Action onClick={onGenerate} wide>Impact Report 생성</Action>
+        <p className="mt-4 text-xs leading-relaxed text-ink-400">PDF 다운로드는 HTML export로 우선 구현되어 있으며, PDF 렌더링은 TODO로 남겼습니다.</p>
+      </Panel>
+      <Panel title="Reports">
+        {state.impactReports.length ? state.impactReports.map((report) => (
+          <article key={report.id} className="mb-4 rounded-lg border border-ink-100 bg-white p-4">
+            <h3 className="font-black">{report.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink-500">{report.summary}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {report.pdf_url && <a className="rounded-lg bg-ink-800 px-3 py-2 text-xs font-black text-white" href={report.pdf_url}>PDF 다운로드</a>}
+              <span className="rounded bg-ink-50 p-3 text-xs">HTML/PDF export ready</span>
             </div>
           </article>
-        ))}
+        )) : <Empty text="아직 생성된 리포트가 없습니다." />}
+      </Panel>
+    </div>
+  )
+}
+
+function AiOps({ runs }: { runs: AiRun[] }) {
+  const [selected, setSelected] = useState<AiRun | undefined>(runs[0])
+  useEffect(() => setSelected(runs[0]), [runs])
+  return (
+    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
+      <Panel title="AI Run Log">
+        <div className="space-y-2">
+          {runs.map((run) => (
+            <button key={run.id} onClick={() => setSelected(run)} className={`w-full rounded-lg border p-3 text-left ${selected?.id === run.id ? 'border-coral-400 bg-coral-50' : 'border-ink-100 bg-white'}`}>
+              <div className="flex items-center justify-between gap-3"><strong>{run.module_name}</strong><Badge label={run.provenance_label} tone={run.provenance_label === 'real_api' ? 'good' : 'demo'} /></div>
+              <div className="mt-1 text-xs text-ink-300">{run.model_name} · {run.latency_ms}ms · {run.prompt_version}</div>
+            </button>
+          ))}
+        </div>
+      </Panel>
+      <Panel title="Run Detail">
+        {selected ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <JsonBlock title="input_json" value={selected.input_json} />
+            <JsonBlock title="output_json" value={selected.output_json} />
+            <JsonBlock title="token_usage_json" value={selected.token_usage_json ?? { note: 'not available for demo_seed' }} />
+            <ExplanationFromRun run={selected} />
+          </div>
+        ) : <Empty text="AI Run이 아직 없습니다." />}
+      </Panel>
+    </div>
+  )
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="rounded-lg bg-white p-5 shadow-card"><h2 className="text-base font-black text-ink-800">{title}</h2><div className="mt-4">{children}</div></section>
+}
+
+function Action({ children, onClick, wide }: { children: React.ReactNode; onClick: () => void; wide?: boolean }) {
+  return <button onClick={onClick} className={`rounded-lg bg-ink-800 px-4 py-2 text-sm font-black text-white hover:bg-coral-600 ${wide ? 'mt-4 w-full' : ''}`}>{children}</button>
+}
+
+function Badge({ label, tone }: { label: string; tone: 'good' | 'demo' }) {
+  return <span className={`inline-flex rounded px-2 py-1 text-[10px] font-black uppercase ${tone === 'good' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{label}</span>
+}
+
+function Metric({ label, value, sub }: { label: string; value: string | number; sub: string }) {
+  return <div className="rounded-lg border border-ink-100 bg-white p-4"><div className="text-xs font-bold text-ink-300" title={sub}>{label}</div><div className="mt-2 text-2xl font-black text-ink-800">{value}</div><div className="mt-1 text-[11px] text-ink-300">{sub}</div></div>
+}
+
+function ScoreBreakdown({ breakdown, compact }: { breakdown: { total: number; factors: ScoreFactor[] }; compact?: boolean }) {
+  return (
+    <div className={compact ? 'mt-3 space-y-2' : 'mt-5 space-y-3'}>
+      <div className="flex items-center justify-between"><strong className="text-sm">Score Breakdown</strong><span className="text-xl font-black text-coral-600">{breakdown.total}</span></div>
+      {breakdown.factors.map((factor) => (
+        <div key={factor.key}>
+          <div className="flex justify-between text-[11px] font-bold text-ink-400"><span>{factor.label} · w {factor.weight}</span><span>{factor.value} → {factor.contribution}</span></div>
+          <div className="mt-1 h-2 rounded bg-ink-100"><div className="h-2 rounded bg-coral-500" style={{ width: `${factor.value}%` }} /></div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ExplanationCard({ title, provenance, model, generatedAt, sources, limits }: { title: string; provenance: string; model: string; generatedAt: string; sources: string[]; limits: string[] }) {
+  return (
+    <div className="mt-4 rounded-lg border border-ink-100 bg-ink-50 p-4">
+      <div className="flex items-center gap-2"><strong>{title}</strong><Badge label={provenance} tone={provenance === 'real_api' ? 'good' : 'demo'} /></div>
+      <div className="mt-2 grid gap-2 text-xs text-ink-400">
+        <div>모델: {model}</div><div>생성 시간: {generatedAt}</div><div>출처: {sources.join(', ')}</div><div>제한: {limits.join(', ')}</div>
       </div>
     </div>
   )
 }
 
-function CommunityTab() {
-  const total = COMMUNITY_TRENDING.reduce((sum, trend) => sum + trend.posts, 0)
-  const topCandidate = [...COMMUNITY_TRENDING].sort(
-    (a, b) => b.candidate_score - a.candidate_score,
-  )[0]
+function ExplanationFromRun({ run }: { run: AiRun }) {
+  return <ExplanationCard title={run.module_name} provenance={run.provenance_label} model={run.model_name} generatedAt={run.created_at} sources={[run.prompt_version]} limits={[run.error ?? '관리자 검수 필요', `human_override=${run.human_override}`]} />
+}
 
+function SelectList({ items, selected, onSelect }: { items: Trend[]; selected?: string; onSelect: (id: string) => void }) {
+  return <div className="mb-4 space-y-2">{items.map((item) => <button key={item.id} onClick={() => onSelect(item.id)} className={`w-full rounded-lg border p-3 text-left text-sm font-bold ${selected === item.id ? 'border-coral-400 bg-coral-50' : 'border-ink-100'}`}>{item.title}</button>)}</div>
+}
+
+function TrendRow({ trend, active }: { trend: Trend; active: boolean }) {
+  return <article className={`rounded-lg border p-4 ${active ? 'border-coral-300 bg-coral-50' : 'border-ink-100 bg-white'}`}><div className="flex flex-wrap items-center gap-2"><strong>{trend.title}</strong><Badge label={trend.provenance_label} tone={trend.provenance_label === 'real_api' ? 'good' : 'demo'} /></div><p className="mt-2 text-sm leading-relaxed text-ink-400">{trend.description}</p></article>
+}
+
+function StatusRow({ label, value, tone }: { label: string; value: string; tone: 'good' | 'demo' }) {
+  return <div className="flex items-center justify-between border-b border-ink-100 py-3 text-sm"><span className="font-bold text-ink-500">{label}</span><Badge label={value} tone={tone} /></div>
+}
+
+function Empty({ text }: { text: string }) {
+  return <div className="rounded-lg border border-dashed border-ink-100 bg-ink-50 p-6 text-sm font-bold text-ink-300">{text}</div>
+}
+
+function JsonBlock({ value, title }: { value: unknown; title?: string }) {
+  return <pre className="max-h-[420px] overflow-auto rounded-lg bg-[#071126] p-4 text-xs leading-relaxed text-coral-50">{title ? `${title}\n` : ''}{JSON.stringify(value, null, 2)}</pre>
+}
+
+function List({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null
   return (
-    <div className="space-y-5">
-      <section className="grid gap-3 md:grid-cols-3">
-        <InsightTile label="24h 활성 게시물" value={`${formatCount(total)}개`} detail="AI 후보 해시태그만 집계" />
-        <InsightTile label="최우선 후보" value={topCandidate.hashtag} detail={`후보 점수 ${topCandidate.candidate_score}`} />
-        <InsightTile label="운영 경고" value="세대·절기 편향" detail="쏠림 신호는 XAI에 별도 표기" />
-      </section>
+    <div className="mt-3">
+      <div className="text-xs font-black uppercase tracking-[0.12em] text-ink-300">{title}</div>
+      <ul className="mt-2 space-y-1 text-sm text-ink-500">
+        {items.map((item) => <li key={item}>• {item}</li>)}
+      </ul>
+    </div>
+  )
+}
 
-      <div className="overflow-hidden rounded-3xl bg-white shadow-card">
-        <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_1.1fr] gap-4 border-b border-ink-100 px-5 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-ink-300 max-md:hidden">
-          <span>Hashtag</span>
-          <span>Signals</span>
-          <span>AI Score</span>
-          <span>XAI Reason</span>
-        </div>
-
-        <div className="divide-y divide-ink-100">
-          {COMMUNITY_TRENDING.map((trend) => {
-            const movement = movementMeta(trend.movement)
-            return (
-              <article
-                key={trend.hashtag}
-                className="grid gap-4 px-5 py-5 md:grid-cols-[1.2fr_0.8fr_0.8fr_1.1fr]"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-black text-coral-600">{trend.hashtag}</h3>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${movement.className}`}>
-                      {movement.label}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs leading-relaxed text-ink-400">
-                    {trend.prediction}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 md:block md:space-y-2">
-                  <Mini label="게시물" value={formatCount(trend.posts)} />
-                  <Mini label="참여율" value={formatPct(trend.engagement_rate)} />
-                  <Mini label="세대 균형" value={trend.generation_mix.toFixed(2)} />
-                </div>
-
-                <div>
-                  <div className="text-3xl font-black text-ink-700">{trend.candidate_score}</div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-50">
-                    <div
-                      className="h-full rounded-full bg-coral-500"
-                      style={{ width: `${trend.candidate_score}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-[11px] text-ink-300">{trend.risk}</p>
-                </div>
-
-                <p className="text-xs leading-relaxed text-ink-500">
-                  <span className="font-black text-coral-600">XAI · </span>
-                  {trend.why}
-                </p>
-              </article>
-            )
-          })}
-        </div>
+function MiniChart({ title, items }: { title: string; items: [string, number][] }) {
+  const max = Math.max(1, ...items.map(([, value]) => Number(value) || 0))
+  return (
+    <div className="rounded-lg border border-ink-100 bg-white p-4">
+      <div className="text-xs font-black text-ink-500">{title}</div>
+      <div className="mt-3 space-y-2">
+        {items.slice(0, 6).map(([label, raw]) => {
+          const value = Number(raw) || 0
+          return (
+            <div key={label}>
+              <div className="flex justify-between text-[11px] font-bold text-ink-300"><span className="truncate">{label}</span><span>{Math.round(value)}</span></div>
+              <div className="mt-1 h-2 rounded bg-ink-100"><div className="h-2 rounded bg-coral-500" style={{ width: `${Math.max(4, (value / max) * 100)}%` }} /></div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 }
 
-function InsightTile({
-  label,
-  value,
-  detail,
-}: {
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <article className="rounded-2xl bg-white p-4 shadow-card">
-      <div className="text-[11px] font-bold text-ink-300">{label}</div>
-      <div className="mt-1 text-lg font-black text-ink-700">{value}</div>
-      <p className="mt-2 text-xs leading-relaxed text-ink-400">{detail}</p>
-    </article>
-  )
+function RiskBar({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-lg bg-ink-50 p-3"><div className="text-[11px] font-black text-ink-400">{label}</div><div className="mt-2 h-20 w-full rounded bg-white"><div className="rounded bg-red-400" style={{ height: `${value}%`, width: '100%', transform: 'translateY(' + (100 - value) + '%)' }} /></div></div>
 }
 
-function Mini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-ink-50 px-3 py-2">
-      <div className="text-[10px] text-ink-300">{label}</div>
-      <div className="text-sm font-bold text-ink-700">{value}</div>
-    </div>
-  )
+function DiffBox({ title, text, good }: { title: string; text: string; good?: boolean }) {
+  return <div className={`rounded-lg p-3 text-sm leading-relaxed ${good ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}><div className="mb-2 text-xs font-black">{title}</div>{text}</div>
 }
 
-function Metric({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div>
-      <div className="text-[10px] font-bold text-ink-300">{label}</div>
-      <div className="mt-1 text-xl font-black text-ink-700">{value}</div>
-    </div>
-  )
-}
-
-function getContribution(feature: XAIFeature) {
-  return feature.weight * feature.value
-}
-
-function getTopFeature(row: AdminTrendScore) {
-  return [...row.features].sort((a, b) => getContribution(b) - getContribution(a))[0]
-}
-
-function getWeakestFeature(row: AdminTrendScore) {
-  return [...row.features].sort((a, b) => getContribution(a) - getContribution(b))[0]
-}
-
-function directionMeta(direction: AdminTrendScore['trend_direction']) {
-  if (direction === 'rising') {
-    return { label: '↑ 상승', className: 'bg-emerald-50 text-emerald-700' }
-  }
-  if (direction === 'declining') {
-    return { label: '↓ 하락', className: 'bg-coral-50 text-coral-600' }
-  }
-  return { label: '→ 안정', className: 'bg-sky-50 text-sky-700' }
-}
-
-function riskMeta(risk: AdminTrendScore['risk_level']) {
-  if (risk === 'high') return { label: 'High Risk', className: 'bg-coral-50 text-coral-600' }
-  if (risk === 'medium') return { label: 'Watch', className: 'bg-amber-50 text-amber-700' }
-  return { label: 'Low Risk', className: 'bg-emerald-50 text-emerald-700' }
-}
-
-function movementMeta(movement: 'up' | 'flat' | 'down') {
-  if (movement === 'up') return { label: '↑ 상승', className: 'bg-emerald-50 text-emerald-700' }
-  if (movement === 'down') return { label: '↓ 하락', className: 'bg-coral-50 text-coral-600' }
-  return { label: '→ 정체', className: 'bg-sky-50 text-sky-700' }
-}
-
-function healthToneClass(tone: 'good' | 'watch' | 'risk') {
-  if (tone === 'good') return 'text-emerald-600'
-  if (tone === 'risk') return 'text-coral-600'
-  return 'text-amber-600'
+function highlightText(text: string, spans: string[]) {
+  if (!spans.length) return text
+  return `${text}\n\n⚠ flagged: ${spans.join(', ')}`
 }

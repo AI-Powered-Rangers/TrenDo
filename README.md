@@ -21,8 +21,103 @@ npm run dev
 npm run build && npm run preview
 ```
 
-> `server/` 폴더는 향후 Claude API/Supabase 연동을 위한 자리만 잡아 둔 부속이며,
-> 데모 시연에는 필요 없습니다. (프론트의 `lib/api.ts`가 클라이언트에서 AI 번역을 시뮬레이션함)
+> `server/` 폴더에는 관리자용 AI 운영 API가 구현되어 있습니다.
+> `OPENAI_API_KEY`가 있으면 OpenAI LLM/Embedding을 호출하고, 키가 없으면 모든 생성 결과와 데이터에
+> `demo_seed` 배지를 붙여 실행됩니다.
+
+## 관리자 AI 운영 서버
+
+### 실행
+
+```bash
+cd server
+npm install
+cp ../.env.example .env
+npm run dev
+```
+
+다른 터미널에서 프론트:
+
+```bash
+cd app
+npm install
+npm run dev
+```
+
+관리자 화면: `/admin`
+
+### 환경변수
+
+`.env.example`에 다음 키를 제공합니다.
+
+| key | 설명 |
+|---|---|
+| `OPENAI_API_KEY` | 있으면 실제 LLM/Embedding 호출 |
+| `OPENAI_MODEL` | 기본 `gpt-4.1-mini` |
+| `OPENAI_EMBEDDING_MODEL` | 기본 `text-embedding-3-small` |
+| `DATA_GO_KR_API_KEY`, `TOUR_API_KEY`, `CULTURE_API_KEY` | 공공데이터 fetcher 확장용. 현재는 provider 구조와 demo fallback 제공 |
+| `CULTURE_API_URL` | 문화시설/행사 JSON API endpoint. `CULTURE_API_KEY`와 함께 있으면 live culture asset provider 사용 |
+| `TREND_RSS_URLS` | 쉼표로 구분한 RSS/Atom 트렌드 소스. 있으면 live trend provider 사용 |
+| `TREND_CSV_URL` | `title,description,source_url,hashtags,category,views_24h,saves` 헤더를 가진 CSV URL |
+| `DATABASE_URL` | 있으면 향후 DB 연결 기준. 현재 구현은 로컬 JSON store를 SQLite fallback처럼 사용 |
+
+### demo_seed와 real_api 차이
+
+- `real_api`: `OPENAI_API_KEY`로 실제 OpenAI API 호출에 성공한 LLM/Embedding 결과입니다.
+- `demo_seed`: API 키가 없거나 외부 데이터 API가 연결되지 않은 상태의 seed/fallback 데이터입니다.
+- `mock_data`: 공공데이터 키는 감지됐지만 provider가 아직 실제 endpoint로 완성되지 않은 경우의 명시적 stub 표시입니다.
+
+관리자 UI는 모든 데이터와 AI 결과에 provenance badge를 표시합니다. AI 생성 챌린지, 제안 메일, 리포트는 항상 검수 필요 상태로 시작하며 관리자 승인 없이 공개/발송되지 않습니다.
+
+### 관리자 API
+
+| method | route |
+|---|---|
+| `GET` | `/api/admin/state` |
+| `POST` | `/api/admin/collect/trends` |
+| `POST` | `/api/admin/collect/local-assets` |
+| `POST` | `/api/admin/ai/embed` |
+| `POST` | `/api/admin/ai/cluster-trends` |
+| `POST` | `/api/admin/ai/run-learning-loop` |
+| `POST` | `/api/admin/ai/generate-trend-context` |
+| `POST` | `/api/admin/ai/translate-by-generation` |
+| `POST` | `/api/admin/ai/generate-challenge` |
+| `POST` | `/api/admin/ai/review-safety` |
+| `POST` | `/api/admin/ai/match-local-assets` |
+| `POST` | `/api/admin/ai/generate-proposal` |
+| `GET` | `/api/admin/analytics/summary` |
+| `POST` | `/api/admin/analytics/diagnose` |
+| `POST` | `/api/admin/reports/generate` |
+| `GET` | `/api/admin/reports/:id/pdf` |
+| `GET` | `/api/admin/ai-runs` |
+
+### LLM schema 검증
+
+서버의 [`server/src/admin/schemas.ts`](server/src/admin/schemas.ts)는 Zod schema로 다음 structured output을 검증합니다.
+
+- `TrendContextSchema`
+- `GenerationTranslationSchema`
+- `ChallengeGenerationSchema`
+- `SafetyReviewSchema`
+- `LocalMatchExplanationSchema`
+- `ProposalEmailSchema`
+- `AnalyticsDiagnosisSchema`
+- `ImpactReportSchema`
+
+검증 실패 또는 API 키 부재 시 `demo_seed_fallback` 결과를 저장하고 `AiRun.status=fallback`, `provenance_label=demo_seed`로 기록합니다.
+
+### 테스트
+
+```bash
+cd server
+npm test
+```
+
+테스트 범위:
+
+- Local Match Score, Trend-to-Action Score 계산
+- analytics metric의 0 나누기 방지
+- LLM JSON schema validation 실패 감지
 
 ## 구현된 기능
 

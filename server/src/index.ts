@@ -1,8 +1,9 @@
-import 'dotenv/config'
+import './env.js'
 import express from 'express'
 import cors from 'cors'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildSystemPrompt, buildUserPrompt, TranslateRequestBody } from './prompts.js'
+import { registerAdminRoutes } from './admin/routes.js'
 
 const app = express()
 app.use(cors())
@@ -14,6 +15,8 @@ const client = apiKey ? new Anthropic({ apiKey }) : null
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, claude: !!client })
 })
+
+registerAdminRoutes(app)
 
 app.post('/api/translate', async (req, res) => {
   const body = req.body as TranslateRequestBody
