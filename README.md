@@ -1,6 +1,6 @@
 # TrendDo
 
-> **KHUTHON 2026 우수상 수상작**
+![Excellence Award](https://img.shields.io/badge/%F0%9F%8F%86_KHUTHON_2026-%EC%9A%B0%EC%88%98%EC%83%81-blue?style=for-the-badge)
 
 ![TrendDo service overview](docs/overview/trendo-service-overview.png)
 
