@@ -1,5 +1,9 @@
 # TrendDo
 
+> **KHUTHON 2026 우수상 수상작**
+
+![TrendDo service overview](docs/overview/trendo-service-overview.png)
+
 > **보는 유행을, 함께 해보는 문화로 바꾸는 플랫폼**
 
 TrendDo는 숏폼과 알고리즘 안에서 빠르게 소비되고 사라지는 유행을 세대별 언어로 번역하고, 실제로 해볼 수 있는 ToDo 챌린지와 지역·전통문화 경험으로 전환하는 AI 문화 순환 플랫폼입니다.
