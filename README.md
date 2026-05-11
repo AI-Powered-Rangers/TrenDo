@@ -10,6 +10,33 @@ TrendDo는 숏폼과 알고리즘 안에서 빠르게 소비되고 사라지는 
 
 단순히 “요즘 뭐가 유행인지” 보여주는 서비스가 아니라, 유행을 **이해 → 행동 → 지역 연결 → 문화 데이터화**까지 이어지게 만드는 것이 목표입니다.
 
+## Team
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="docs/team/kim-sieun.jpeg" width="150" height="150" alt="김시은" />
+      <br />
+      <a href="https://github.com/sheunn"><strong>김시은</strong></a>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/team/yoon-jeongah.jpeg" width="150" height="150" alt="윤정아" />
+      <br />
+      <a href="https://github.com/jjyoon012-git"><strong>윤정아</strong></a>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/team/jung-jihoon.jpeg" width="150" height="150" alt="정지훈" />
+      <br />
+      <a href="https://github.com/jeehun3020"><strong>정지훈</strong></a>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/team/han-sumin.jpeg" width="150" height="150" alt="한수민" />
+      <br />
+      <a href="https://github.com/handoomin"><strong>한수민</strong></a>
+    </td>
+  </tr>
+</table>
+
 ## 문제 의식
 
 지금 대중문화는 콘텐츠가 부족한 것이 아니라, 너무 빠르게 소비되고 사라집니다.
